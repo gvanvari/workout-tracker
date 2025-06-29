@@ -3,6 +3,7 @@ import useLocalStorage from './useLocalStorage';
 import { login as apiLogin } from '../services/auth';
 
 function useAuth() {
+    // Always coerce to boolean in case localStorage has a string or null
     const [isAuthenticated, setIsAuthenticated] = useLocalStorage('isAuthenticated', false);
     const [password, setPassword] = useState('');
 
@@ -12,6 +13,7 @@ function useAuth() {
             setIsAuthenticated(true);
             return true;
         } else {
+            setIsAuthenticated(false); // Explicitly set to false on failed login
             return false;
         }
     }
@@ -22,7 +24,7 @@ function useAuth() {
     }
 
     return {
-        isAuthenticated,
+        isAuthenticated: Boolean(isAuthenticated), // Always return a boolean
         login,
         logout,
         password,

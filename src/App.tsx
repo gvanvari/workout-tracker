@@ -11,21 +11,23 @@ import './App.css';
 const App = () => {
   return (
     <Router>
-      <Header />
-      <Navigation />
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/add-set" element={
-          <ProtectedRoute>
-            <AddSet />
-          </ProtectedRoute>
-        } />
-        <Route path="/exercise-history" element={
-          <ProtectedRoute>
-            <ExerciseHistory />
-          </ProtectedRoute>
-        } />
-      </Routes>
+      <div className="container">
+        <Header />
+        <Navigation />
+        <Routes>
+          <Route path="/" element={<Login />} />
+          <Route path="/add-set" element={
+            <ProtectedRoute>
+              <AddSet />
+            </ProtectedRoute>
+          } />
+          <Route path="/exercise-history" element={
+            <ProtectedRoute>
+              <ExerciseHistory />
+            </ProtectedRoute>
+          } />
+        </Routes>
+      </div>
     </Router>
   );
 };
