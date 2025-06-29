@@ -1,20 +1,25 @@
 import React, { useEffect, useState } from 'react';
-import { useExercises } from '../../hooks/useExercises';
-import { Table } from '../UI/Table';
+import useExercises from '../../hooks/useExercises';
+import Table from '../UI/Table';
 
 const ExerciseHistory: React.FC = () => {
-    const { fetchExercises, exercises } = useExercises();
+    const { exercises, getHistory } = useExercises();
     const [selectedExercise, setSelectedExercise] = useState<string>('');
     const [exerciseHistory, setExerciseHistory] = useState<any[]>([]);
 
     useEffect(() => {
-        fetchExercises();
-    }, [fetchExercises]);
+        // Optionally, you can fetch all exercises here if needed, or remove this effect if not required
+    }, []);
 
-    const handleExerciseChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        setSelectedExercise(event.target.value);
-        const history = exercises.filter(exercise => exercise.name === event.target.value);
-        setExerciseHistory(history);
+    const handleExerciseChange = async (event: React.ChangeEvent<HTMLSelectElement>) => {
+        const selected = event.target.value;
+        setSelectedExercise(selected);
+        if (selected) {
+            const history = await getHistory(selected);
+            setExerciseHistory(history);
+        } else {
+            setExerciseHistory([]);
+        }
     };
 
     const uniqueExercises = Array.from(new Set(exercises.map(exercise => exercise.name)));
@@ -30,9 +35,16 @@ const ExerciseHistory: React.FC = () => {
             </select>
             {exerciseHistory.length > 0 && (
                 <div>
-                    {Array.from(new Set(exerciseHistory.map(exercise => exercise.setNumber))).map(setNumber => (
-                        <Table key={setNumber} data={exerciseHistory.filter(exercise => exercise.setNumber === setNumber)} />
-                    ))}
+                    {Array.from(new Set(exerciseHistory.map(exercise => exercise.setNumber))).map(setNumber => {
+                        const filteredData = exerciseHistory.filter(exercise => exercise.setNumber === setNumber);
+                        // Define headers based on the keys of the first item, or provide static headers if known
+                        const headers = filteredData.length > 0 ? Object.keys(filteredData[0]) : [];
+                        // Convert data to array of arrays for Table
+                        const tableData = filteredData.map(item => headers.map(header => item[header]));
+                        return (
+                            <Table key={setNumber} headers={headers} data={tableData} />
+                        );
+                    })}
                 </div>
             )}
         </div>
