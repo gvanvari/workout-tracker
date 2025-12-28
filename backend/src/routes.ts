@@ -54,7 +54,7 @@ export function setupRoutes(app: any, db: sqlite3.Database, loginLimiter: any): 
         'INSERT INTO exercises (date, name, sets, reps, weight, rpe, notes) VALUES (?, ?, ?, ?, ?, ?, ?)'
       );
 
-      stmt.run(date, name, sets, reps, weight, rpe, notes || null, function (err: Error | null) {
+      stmt.run(date, name, sets, reps, weight, rpe, notes || null, function (this: any, err: Error | null) {
         if (err) {
           res.status(500).json({ error: 'Database error', message: err.message });
           return;
@@ -108,7 +108,7 @@ export function setupRoutes(app: any, db: sqlite3.Database, loginLimiter: any): 
         'UPDATE exercises SET date = ?, name = ?, sets = ?, reps = ?, weight = ?, rpe = ?, notes = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
       );
 
-      stmt.run(date, name, sets, reps, weight, rpe, notes || null, id, function (err: Error | null) {
+      stmt.run(date, name, sets, reps, weight, rpe, notes || null, id, function (this: any, err: Error | null) {
         if (err) {
           res.status(500).json({ error: 'Database error', message: err.message });
           return;
