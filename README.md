@@ -18,11 +18,11 @@ A lightweight, local-first workout tracking application built with vanilla TypeS
 
 ## 🛠️ Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| **Frontend** | TypeScript + HTML + CSS + Vite |
-| **Backend** | Node.js + Express |
-| **Database** | SQLite (file-based) |
+| Layer        | Technology                                   |
+| ------------ | -------------------------------------------- |
+| **Frontend** | TypeScript + HTML + CSS + Vite               |
+| **Backend**  | Node.js + Express                            |
+| **Database** | SQLite (file-based)                          |
 | **Security** | bcrypt, JWT, rate limiting, input validation |
 
 ---
@@ -30,6 +30,7 @@ A lightweight, local-first workout tracking application built with vanilla TypeS
 ## 📋 Prerequisites
 
 Before starting, ensure you have:
+
 - **macOS 13+** (Intel or Apple Silicon)
 - **Homebrew** installed
 - **Terminal/iTerm2** for commands
@@ -63,30 +64,47 @@ sqlite3 --version # Should show version
 ### Step 2: Install Dependencies
 
 ```bash
-# Backend
-cd /Users/gvanvari/code/workout-tracker/backend
-npm install
-cp .env.example .env
+cd /Users/gvanvari/code/workout-tracker
 
-# Frontend
-cd ../frontend
+# Install root dependencies
 npm install
+
+# Install backend dependencies
+npm -C backend install
+cp backend/.env.example backend/.env
+
+# Install frontend dependencies
+npm -C frontend install
 ```
 
-### Step 3: Start Servers
+### Step 3: Start Both Servers (Recommended)
+
+```bash
+cd /Users/gvanvari/code/workout-tracker
+npx concurrently "npm -C backend run dev" "npm -C frontend run dev"
+```
+
+Both servers will start together:
+
+- Backend: http://localhost:4000
+- Frontend: http://localhost:5173
+
+**Alternative: Run servers separately**
 
 **Terminal 1 - Backend**
+
 ```bash
 cd /Users/gvanvari/code/workout-tracker/backend
 npm run dev
-# Output: "Server running on port 4000"
+# Output: "✅ Server running on http://localhost:4000"
 ```
 
 **Terminal 2 - Frontend**
+
 ```bash
 cd /Users/gvanvari/code/workout-tracker/frontend
 npm run dev
-# Output: "Local: http://localhost:5173"
+# Output: "➜  Local:   http://localhost:5173/"
 ```
 
 ### Step 4: Access App
@@ -132,6 +150,7 @@ workout-tracker/
 ## 🔧 Development Commands
 
 **Backend:**
+
 ```bash
 cd backend
 npm run dev     # Start with auto-reload
@@ -140,6 +159,7 @@ npm start       # Run production
 ```
 
 **Frontend:**
+
 ```bash
 cd frontend
 npm run dev     # Start dev server
@@ -152,6 +172,7 @@ npm run preview # Preview build
 ## 📡 API Endpoints
 
 ### Authentication
+
 ```
 POST /api/auth/login
   Request: { "password": "string" }
@@ -159,6 +180,7 @@ POST /api/auth/login
 ```
 
 ### Exercises
+
 ```
 GET    /api/exercises                    # List (filters: ?name=, ?startDate=, ?endDate=)
 POST   /api/exercises                    # Create
@@ -169,6 +191,7 @@ GET    /api/backup/export                # Export JSON
 ```
 
 ### Request Body Example (POST /api/exercises)
+
 ```json
 {
   "date": "2025-01-20",
@@ -188,6 +211,7 @@ GET    /api/backup/export                # Export JSON
 SQLite database auto-created at `backend/data.db`
 
 **exercises table:**
+
 ```
 id INTEGER PRIMARY KEY
 date TEXT (YYYY-MM-DD)
@@ -202,6 +226,7 @@ updated_at DATETIME
 ```
 
 **View data:**
+
 ```bash
 sqlite3 backend/data.db
 > SELECT * FROM exercises;
@@ -266,6 +291,7 @@ curl "http://localhost:4000/api/exercises?name=squat"
 ## 🚨 Troubleshooting
 
 ### "Port 4000 already in use"
+
 ```bash
 lsof -i :4000       # Find process
 kill -9 <PID>       # Kill it
@@ -273,18 +299,21 @@ kill -9 <PID>       # Kill it
 ```
 
 ### "npm: command not found"
+
 ```bash
 brew uninstall node && brew install node
 node --version
 ```
 
 ### "sqlite3: command not found"
+
 ```bash
 brew install sqlite3
 sqlite3 --version
 ```
 
 ### Frontend won't load
+
 ```bash
 # Start backend first!
 cd backend && npm run dev
@@ -293,6 +322,7 @@ cd frontend && npm run dev
 ```
 
 ### Database locked
+
 ```bash
 # Restart backend
 cd backend && npm run dev

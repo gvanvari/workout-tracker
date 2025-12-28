@@ -10,24 +10,67 @@ export async function login(password: string): Promise<{ token: string; success:
   if (!response.ok) {
     throw new Error(data.message || 'Login failed');
   }
+  localStorage.setItem('token', data.token);
   return data;
 }
 
-export async function getExercises(token: string, filters?: { name?: string; startDate?: string; endDate?: string }): Promise<any[]> {
-  const params = new URLSearchParams();
-  if (filters?.name) params.append('name', filters.name);
-  if (filters?.startDate) params.append('startDate', filters.startDate);
-  if (filters?.endDate) params.append('endDate', filters.endDate);
+// ===== WORKOUT API =====
 
-  const response = await fetch(`${API_URL}/exercises?${params}`, {
+export async function getWorkouts(token: string): Promise<any[]> {
+  const response = await fetch(`${API_URL}/workouts`, {
     headers: { 'Authorization': `Bearer ${token}` }
   });
   const data = await response.json();
   if (!response.ok) {
-    throw new Error(data.error || 'Failed to fetch exercises');
+    throw new Error(data.error || 'Failed to fetch workouts');
   }
   return data;
 }
+
+export async function createWorkout(token: string, workout: any): Promise<any> {
+  const response = await fetch(`${API_URL}/workouts`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(workout)
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error || 'Failed to create workout');
+  }
+  return data;
+}
+
+export async function finishWorkout(token: string, workoutId: number, endTime?: string): Promise<any> {
+  const response = await fetch(`${API_URL}/workouts/${workoutId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({ endTime })
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error || 'Failed to finish workout');
+  }
+  return data;
+}
+
+export async function deleteWorkout(token: string, id: number): Promise<void> {
+  const response = await fetch(`${API_URL}/workouts/${id}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.error || 'Failed to delete workout');
+  }
+}
+
+// ===== EXERCISE API =====
 
 export async function addExercise(token: string, exercise: any): Promise<any> {
   const response = await fetch(`${API_URL}/exercises`, {
@@ -41,22 +84,6 @@ export async function addExercise(token: string, exercise: any): Promise<any> {
   const data = await response.json();
   if (!response.ok) {
     throw new Error(data.error || 'Failed to add exercise');
-  }
-  return data;
-}
-
-export async function updateExercise(token: string, id: number, exercise: any): Promise<any> {
-  const response = await fetch(`${API_URL}/exercises/${id}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify(exercise)
-  });
-  const data = await response.json();
-  if (!response.ok) {
-    throw new Error(data.error || 'Failed to update exercise');
   }
   return data;
 }

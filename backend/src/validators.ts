@@ -1,9 +1,16 @@
-export function validateExercise(data: any): void {
+export function validateWorkout(data: any): void {
   // Validate date format (YYYY-MM-DD)
   if (!data.date || !/^\d{4}-\d{2}-\d{2}$/.test(data.date)) {
     throw new Error('Invalid date format (YYYY-MM-DD)');
   }
 
+  // Validate workout name
+  if (!data.workoutName || typeof data.workoutName !== 'string' || data.workoutName.length === 0) {
+    throw new Error('Workout name is required');
+  }
+}
+
+export function validateExercise(data: any): void {
   // Validate name
   if (!data.name || typeof data.name !== 'string' || data.name.length === 0 || data.name.length > 50) {
     throw new Error('Invalid exercise name (1-50 characters)');
@@ -14,25 +21,41 @@ export function validateExercise(data: any): void {
     throw new Error('Sets must be between 1 and 20');
   }
 
-  // Validate reps
-  if (!data.reps || typeof data.reps !== 'string' || data.reps.length === 0) {
-    throw new Error('Invalid reps format');
+  // Validate per-set data (required)
+  if (!data.setDetails || !Array.isArray(data.setDetails)) {
+    throw new Error('setDetails must be an array');
   }
 
-  // Validate weight
-  if (typeof data.weight !== 'number' || data.weight < 0 || data.weight > 1000) {
-    throw new Error('Weight must be between 0 and 1000 lbs');
-  }
-
-  // Validate RPE
-  if (!Number.isInteger(data.rpe) || data.rpe < 1 || data.rpe > 10) {
-    throw new Error('RPE must be between 1 and 10');
-  }
+  validateSetDetails(data.setDetails, data.sets);
 
   // Optional notes validation
   if (data.notes && (typeof data.notes !== 'string' || data.notes.length > 500)) {
     throw new Error('Notes must be less than 500 characters');
   }
+}
+
+// Validate per-set data structure
+function validateSetDetails(setDetails: any, expectedSets: number): void {
+  if (!Array.isArray(setDetails) || setDetails.length !== expectedSets) {
+    throw new Error(`Must provide exactly ${expectedSets} sets of data`);
+  }
+
+  setDetails.forEach((set: any, index: number) => {
+    // Validate reps
+    if (!Number.isInteger(set.reps) || set.reps <= 0) {
+      throw new Error(`Set ${index + 1}: Reps must be a positive integer`);
+    }
+
+    // Validate weight - MUST be > 0
+    if (typeof set.weight !== 'number' || set.weight <= 0 || set.weight > 1000) {
+      throw new Error(`Set ${index + 1}: Weight must be greater than 0 and not exceed 1000 lbs`);
+    }
+
+    // Validate RPE
+    if (!Number.isInteger(set.rpe) || set.rpe < 1 || set.rpe > 10) {
+      throw new Error(`Set ${index + 1}: RPE must be between 1 and 10`);
+    }
+  });
 }
 
 export function validatePassword(password: string): void {

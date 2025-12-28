@@ -209,6 +209,9 @@ th {
 td {
   padding: 12px;
   border-bottom: 1px solid #ecf0f1;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-width: 350px;
 }
 
 tr:hover {
@@ -270,6 +273,72 @@ tr:hover {
   color: #2c3e50;
 }
 
+/* Workout Cards */
+.workouts-list {
+  margin-top: 30px;
+}
+
+.workouts-list h2 {
+  margin-bottom: 20px;
+  color: #2c3e50;
+}
+
+.workout-card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-bottom: 15px;
+  overflow: hidden;
+}
+
+.workout-header {
+  background-color: #3498db;
+  color: white;
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.workout-header h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.workout-date {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.workout-exercises {
+  padding: 15px;
+}
+
+.exercise-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 10px 0;
+  border-bottom: 1px solid #ecf0f1;
+}
+
+.exercise-item:last-child {
+  border-bottom: none;
+}
+
+.exercise-name {
+  font-weight: 600;
+  color: #2c3e50;
+  flex: 0 0 200px;
+}
+
+.exercise-info {
+  color: #7f8c8d;
+  font-size: 13px;
+  flex: 1;
+  text-align: right;
+}
+
 /* Filters */
 .filter-container {
   background-color: white;
@@ -328,4 +397,121 @@ tr:hover {
   td, th {
     padding: 8px;
   }
+}
+
+/* Per-Set Input Styles */
+.sets-container {
+  display: grid;
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.set-card {
+  background-color: #f9f9f9;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.set-card:hover {
+  background-color: #fff;
+  border-color: #3498db;
+  box-shadow: 0 4px 8px rgba(52, 152, 219, 0.1);
+}
+
+.set-card h4 {
+  margin-bottom: 12px;
+  color: #2c3e50;
+  font-size: 16px;
+  font-weight: 600;
+}
+/* History Page Styles */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.workout-history-card {
+  background-color: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.workout-history-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  border-color: #3498db;
+}
+
+.workout-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.workout-history-header h3 {
+  font-size: 20px;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.workout-history-exercises {
+  display: grid;
+  gap: 15px;
+}
+
+.exercise-detail-card {
+  background-color: #f9f9f9;
+  border-left: 4px solid #3498db;
+  border-radius: 4px;
+  padding: 15px;
+  transition: all 0.3s ease;
+}
+
+.exercise-detail-card:hover {
+  background-color: #fff;
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.1);
+}
+
+.exercise-detail-card h4 {
+  font-size: 16px;
+  color: #2c3e50;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.set-detail {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  font-size: 14px;
+  color: #555;
+}
+
+.set-label {
+  font-weight: 600;
+  color: #3498db;
+  min-width: 70px;
+}
+
+.set-info {
+  color: #666;
+  font-family: 'Courier New', monospace;
+}
+
+.exercise-notes {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #e0e0e0;
+  font-style: italic;
+  color: #888;
 }

@@ -13,25 +13,38 @@ export function initializeDatabase(): sqlite3.Database {
 
   // Create tables
   db.serialize(() => {
-    // Exercises table
+    // Workouts table - represents a workout session
     db.run(`
-      CREATE TABLE IF NOT EXISTS exercises (
+      CREATE TABLE IF NOT EXISTS workouts (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         date TEXT NOT NULL,
-        name TEXT NOT NULL,
-        sets INTEGER NOT NULL,
-        reps TEXT NOT NULL,
-        weight REAL NOT NULL,
-        rpe INTEGER NOT NULL,
+        workoutName TEXT NOT NULL,
+        startTime TEXT,
+        endTime TEXT,
         notes TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
+    // Exercises table - exercises within a workout session
+    db.run(`
+      CREATE TABLE IF NOT EXISTS exercises (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        workoutId INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        sets INTEGER NOT NULL,
+        setDetails TEXT NOT NULL,
+        notes TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (workoutId) REFERENCES workouts(id) ON DELETE CASCADE
+      )
+    `);
+
     // Create indexes
-    db.run(`CREATE INDEX IF NOT EXISTS idx_exercises_date ON exercises(date)`);
-    db.run(`CREATE INDEX IF NOT EXISTS idx_exercises_name ON exercises(name)`);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_workouts_date ON workouts(date)`);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_exercises_workoutId ON exercises(workoutId)`);
   });
 
   return db;

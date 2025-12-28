@@ -1,72 +1,196 @@
 import { Request, Response } from 'express';
 import sqlite3 from 'sqlite3';
-import { validateExercise } from './validators';
+import { validateWorkout, validateExercise } from './validators';
 import { setupAuthRoutes, verifyToken } from './auth';
 
 export function setupRoutes(app: any, db: sqlite3.Database, loginLimiter: any): void {
   // Setup auth routes
   setupAuthRoutes(app, db, loginLimiter);
 
-  // GET /api/exercises - Get all exercises with optional filters
-  app.get('/api/exercises', verifyToken, (req: Request, res: Response) => {
+  // ===== WORKOUT ENDPOINTS =====
+
+  // GET /api/workouts - Get all workouts with their exercises
+  app.get('/api/workouts', verifyToken, (req: Request, res: Response) => {
     try {
-      const { name, startDate, endDate } = req.query;
+      db.all(
+        'SELECT * FROM workouts ORDER BY date DESC, created_at DESC',
+        (err: Error | null, workouts: any[]) => {
+          if (err) {
+            res.status(500).json({ error: 'Database error', message: err.message });
+            return;
+          }
 
-      let query = 'SELECT * FROM exercises';
-      const params: any[] = [];
+          // Fetch exercises for each workout
+          const workoutsWithExercises = workouts.map(workout => ({
+            ...workout,
+            exercises: []
+          }));
 
-      if (name) {
-        query += ' WHERE name LIKE ?';
-        params.push(`%${name}%`);
-      }
+          let completed = 0;
+          workouts.forEach((workout, idx) => {
+            db.all(
+              'SELECT * FROM exercises WHERE workoutId = ? ORDER BY created_at ASC',
+              [workout.id],
+              (err: Error | null, exercises: any[]) => {
+                if (!err) {
+                  workoutsWithExercises[idx].exercises = exercises;
+                }
+                completed++;
+                if (completed === workouts.length) {
+                  res.json(workoutsWithExercises);
+                }
+              }
+            );
+          });
 
-      if (startDate && endDate) {
-        if (name) {
-          query += ' AND date BETWEEN ? AND ?';
-        } else {
-          query += ' WHERE date BETWEEN ? AND ?';
+          if (workouts.length === 0) {
+            res.json([]);
+          }
         }
-        params.push(startDate, endDate);
-      }
+      );
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
 
-      query += ' ORDER BY date DESC';
+  // POST /api/workouts - Create new workout session
+  app.post('/api/workouts', verifyToken, (req: Request, res: Response) => {
+    try {
+      const { date, workoutName, startTime, notes } = req.body;
 
-      db.all(query, params, (err: Error | null, rows: any[]) => {
+      validateWorkout({ date, workoutName });
+
+      const stmt = db.prepare(
+        'INSERT INTO workouts (date, workoutName, startTime, notes) VALUES (?, ?, ?, ?)'
+      );
+
+      stmt.run(date, workoutName, startTime || null, notes || null, function (this: any, err: Error | null) {
         if (err) {
           res.status(500).json({ error: 'Database error', message: err.message });
           return;
         }
-        res.json(rows);
+
+        res.status(201).json({
+          id: this.lastID,
+          date,
+          workoutName,
+          startTime: startTime || null,
+          notes: notes || null,
+          exercises: []
+        });
       });
     } catch (error: any) {
       res.status(400).json({ error: error.message });
     }
   });
 
-  // POST /api/exercises - Create new exercise
-  app.post('/api/exercises', verifyToken, (req: Request, res: Response) => {
+  // GET /api/workouts/:id - Get single workout with exercises
+  app.get('/api/workouts/:id', verifyToken, (req: Request, res: Response) => {
     try {
-      const { date, name, sets, reps, weight, rpe, notes } = req.body;
+      const { id } = req.params;
 
-      validateExercise({ date, name, sets, reps, weight, rpe, notes });
-
-      const stmt = db.prepare(
-        'INSERT INTO exercises (date, name, sets, reps, weight, rpe, notes) VALUES (?, ?, ?, ?, ?, ?, ?)'
-      );
-
-      stmt.run(date, name, sets, reps, weight, rpe, notes || null, function (this: any, err: Error | null) {
+      db.get('SELECT * FROM workouts WHERE id = ?', [id], (err: Error | null, workout: any) => {
         if (err) {
           res.status(500).json({ error: 'Database error', message: err.message });
           return;
         }
+        if (!workout) {
+          res.status(404).json({ error: 'Workout not found' });
+          return;
+        }
+
+        db.all(
+          'SELECT * FROM exercises WHERE workoutId = ? ORDER BY created_at ASC',
+          [id],
+          (err: Error | null, exercises: any[]) => {
+            if (err) {
+              res.status(500).json({ error: 'Database error', message: err.message });
+              return;
+            }
+            res.json({ ...workout, exercises });
+          }
+        );
+      });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // PUT /api/workouts/:id - Update workout (mainly for endTime/notes)
+  app.put('/api/workouts/:id', verifyToken, (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { endTime, notes } = req.body;
+
+      const stmt = db.prepare(
+        'UPDATE workouts SET endTime = ?, notes = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
+      );
+
+      stmt.run(endTime || null, notes || null, id, function (this: any, err: Error | null) {
+        if (err) {
+          res.status(500).json({ error: 'Database error', message: err.message });
+          return;
+        }
+        if (this.changes === 0) {
+          res.status(404).json({ error: 'Workout not found' });
+          return;
+        }
+        res.json({ id: parseInt(id), endTime: endTime || null, notes: notes || null });
+      });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // DELETE /api/workouts/:id - Delete workout (cascades to exercises)
+  app.delete('/api/workouts/:id', verifyToken, (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+
+      const stmt = db.prepare('DELETE FROM workouts WHERE id = ?');
+      stmt.run(id, function (err: Error | null) {
+        if (err) {
+          res.status(500).json({ error: 'Database error', message: err.message });
+          return;
+        }
+        if (this.changes === 0) {
+          res.status(404).json({ error: 'Workout not found' });
+          return;
+        }
+        res.status(204).send();
+      });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // ===== EXERCISE ENDPOINTS =====
+
+  // POST /api/exercises - Create exercise within a workout
+  app.post('/api/exercises', verifyToken, (req: Request, res: Response) => {
+    try {
+      const { workoutId, name, sets, setDetails, notes } = req.body;
+
+      validateExercise({ name, sets, setDetails, notes });
+
+      const setDetailsJson = JSON.stringify(setDetails);
+
+      const stmt = db.prepare(
+        'INSERT INTO exercises (workoutId, name, sets, setDetails, notes) VALUES (?, ?, ?, ?, ?)'
+      );
+
+      stmt.run(workoutId, name, sets, setDetailsJson, notes || null, function (this: any, err: Error | null) {
+        if (err) {
+          res.status(500).json({ error: 'Database error', message: err.message });
+          return;
+        }
+
         res.status(201).json({
           id: this.lastID,
-          date,
+          workoutId,
           name,
           sets,
-          reps,
-          weight,
-          rpe,
+          setDetails,
           notes: notes || null
         });
       });
@@ -96,34 +220,6 @@ export function setupRoutes(app: any, db: sqlite3.Database, loginLimiter: any): 
     }
   });
 
-  // PUT /api/exercises/:id - Update exercise
-  app.put('/api/exercises/:id', verifyToken, (req: Request, res: Response) => {
-    try {
-      const { id } = req.params;
-      const { date, name, sets, reps, weight, rpe, notes } = req.body;
-
-      validateExercise({ date, name, sets, reps, weight, rpe, notes });
-
-      const stmt = db.prepare(
-        'UPDATE exercises SET date = ?, name = ?, sets = ?, reps = ?, weight = ?, rpe = ?, notes = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
-      );
-
-      stmt.run(date, name, sets, reps, weight, rpe, notes || null, id, function (this: any, err: Error | null) {
-        if (err) {
-          res.status(500).json({ error: 'Database error', message: err.message });
-          return;
-        }
-        if (this.changes === 0) {
-          res.status(404).json({ error: 'Exercise not found' });
-          return;
-        }
-        res.json({ id: parseInt(id), date, name, sets, reps, weight, rpe, notes: notes || null });
-      });
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
-    }
-  });
-
   // DELETE /api/exercises/:id - Delete exercise
   app.delete('/api/exercises/:id', verifyToken, (req: Request, res: Response) => {
     try {
@@ -146,26 +242,65 @@ export function setupRoutes(app: any, db: sqlite3.Database, loginLimiter: any): 
     }
   });
 
-  // GET /api/backup/export - Export all exercises as JSON
+  // GET /api/backup/export - Export all workouts and exercises as JSON
   app.get('/api/backup/export', verifyToken, (req: Request, res: Response) => {
     try {
-      db.all('SELECT * FROM exercises ORDER BY date DESC', (err: Error | null, rows: any[]) => {
-        if (err) {
-          res.status(500).json({ error: 'Database error', message: err.message });
-          return;
+      db.all(
+        'SELECT * FROM workouts ORDER BY date DESC',
+        (err: Error | null, workouts: any[]) => {
+          if (err) {
+            res.status(500).json({ error: 'Database error', message: err.message });
+            return;
+          }
+
+          const workoutsWithExercises = workouts.map(workout => ({
+            ...workout,
+            exercises: []
+          }));
+
+          let completed = 0;
+          if (workouts.length === 0) {
+            const timestamp = new Date().toISOString().slice(0, 10);
+            res.setHeader('Content-Type', 'application/json');
+            res.setHeader('Content-Disposition', `attachment; filename="workout-backup-${timestamp}.json"`);
+            res.json({
+              exportDate: new Date().toISOString(),
+              workoutCount: 0,
+              exerciseCount: 0,
+              workouts: []
+            });
+            return;
+          }
+
+          workouts.forEach((workout, idx) => {
+            db.all(
+              'SELECT * FROM exercises WHERE workoutId = ?',
+              [workout.id],
+              (err: Error | null, exercises: any[]) => {
+                if (!err) {
+                  workoutsWithExercises[idx].exercises = exercises;
+                }
+                completed++;
+                if (completed === workouts.length) {
+                  const exerciseCount = workoutsWithExercises.reduce((sum, w) => sum + w.exercises.length, 0);
+                  const timestamp = new Date().toISOString().slice(0, 10);
+                  res.setHeader('Content-Type', 'application/json');
+                  res.setHeader('Content-Disposition', `attachment; filename="workout-backup-${timestamp}.json"`);
+                  res.json({
+                    exportDate: new Date().toISOString(),
+                    workoutCount: workouts.length,
+                    exerciseCount,
+                    workouts: workoutsWithExercises
+                  });
+                }
+              }
+            );
+          });
         }
-        
-        const timestamp = new Date().toISOString().slice(0, 10);
-        res.setHeader('Content-Type', 'application/json');
-        res.setHeader('Content-Disposition', `attachment; filename="workout-backup-${timestamp}.json"`);
-        res.json({
-          exportDate: new Date().toISOString(),
-          exerciseCount: rows.length,
-          exercises: rows
-        });
-      });
+      );
     } catch (error: any) {
       res.status(400).json({ error: error.message });
     }
   });
 }
+

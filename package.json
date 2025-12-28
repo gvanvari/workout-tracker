@@ -4,7 +4,7 @@
   "description": "A lightweight, local-first workout tracking application",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"npm -C backend run dev\" \"npm -C frontend run dev\"",
+    "dev": "npm install && npm -C backend install && npm -C frontend install && npx concurrently \"npm -C backend run dev\" \"npm -C frontend run dev\"",
     "build": "npm -C backend run build && npm -C frontend run build",
     "start": "npm -C backend start"
   },
