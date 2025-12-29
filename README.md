@@ -1,359 +1,142 @@
-# Workout Tracker - MVP
+# 💪 Workout Tracker MVP
 
-A lightweight, local-first workout tracking application built with vanilla TypeScript and Node.js. Track exercises, sets, reps, weights, and RPE ratings with a secure, self-hosted backend.
+A locally-hosted, full-stack workout tracking application demonstrating modern web development practices and architecture patterns.
 
----
+## 🎯 Technical Highlights
 
-## ✨ Features
+### Architecture & Design Patterns
 
-- **Simple Login** - Password-protected access
-- **Add Exercises** - Track date, exercise name, sets, reps, weight, RPE
-- **View History** - Filter by exercise name and date range
-- **Export Data** - Manual JSON backup
-- **Secure** - Input validation, parameterized SQL, bcrypt password hashing, rate limiting
-- **Local First** - All data stored in SQLite (no cloud required)
-- **REST API** - Clean, documented endpoints
+- **Session-Based Data Model** - Workouts contain multiple exercises (proper parent-child hierarchy with FK relationships)
+- **REST API** - Clean separation of concerns with dedicated backend routes and middleware
+- **JWT Authentication** - Stateless authentication with token expiration (7-day lifecycle)
+- **Fuzzy Matching** - Smart exercise name normalization using Levenshtein distance (>85% similarity threshold) to prevent duplicates from typos
 
----
+### Frontend Implementation
 
-## 🛠️ Tech Stack
+- **Vanilla TypeScript** - No frameworks; pure DOM manipulation for educational clarity
+- **Multi-Page SPA** - Client-side routing with state management (Dashboard, Add Exercise, History, Progress)
+- **Real-Time Suggestions** - Autocomplete with predefined exercise library + fuzzy matching against past exercises
+- **Data Visualization** - Exercise progress tracking across multiple workouts with aggregate statistics
 
-| Layer        | Technology                                   |
-| ------------ | -------------------------------------------- |
-| **Frontend** | TypeScript + HTML + CSS + Vite               |
-| **Backend**  | Node.js + Express                            |
-| **Database** | SQLite (file-based)                          |
-| **Security** | bcrypt, JWT, rate limiting, input validation |
+### Backend & Database
 
----
+- **Node.js + Express** - Modular route handlers, middleware pipeline, error handling
+- **SQLite with Relational Schema** - Proper foreign keys, cascade deletes, indexed queries
+- **Input Validation** - Dual-layer validation (backend + frontend) with type-safe schemas
+- **Security** - bcrypt password hashing, rate limiting, parameterized SQL queries, CORS protection
 
-## 📋 Prerequisites
+### Advanced Features
 
-Before starting, ensure you have:
+- **Per-Set Tracking** - JSON storage of weight, reps, RPE for each set with full history
+- **Normalized Exercise Names** - Automatic grouping of similar exercise names using fuzzy matching
+- **Hierarchical Data Export** - Complete JSON backup with nested workout-exercise structure
+- **Progress Analytics** - Aggregate max weights, count statistics across multiple workout sessions
 
-- **macOS 13+** (Intel or Apple Silicon)
-- **Homebrew** installed
-- **Terminal/iTerm2** for commands
-- **VS Code** (recommended)
-- **~20 minutes** for initial setup
+## 📚 Tech Stack
 
-For detailed tool installation, see [tool-setup.md](tool-setup.md).
+| Layer        | Technologies                                   |
+| ------------ | ---------------------------------------------- |
+| **Frontend** | TypeScript, HTML, CSS, Vite                    |
+| **Backend**  | Node.js, Express, TypeScript                   |
+| **Database** | SQLite3 with relational schema                 |
+| **Security** | bcryptjs, JWT, rate-limiting, input validation |
+| **Build**    | TypeScript compiler, Vite bundler              |
 
----
+## 🚀 Getting Started
 
-## 🚀 Quick Start (5 minutes)
+See [QUICKSTART.md](QUICKSTART.md) for a 30-second setup.  
+See [SETUP.md](SETUP.md) for detailed installation instructions.  
+See [tool-setup.md](tool-setup.md) for environment setup.
 
-### Step 1: Install Tools (One-time)
+## ✨ Core Features
 
-```bash
-# Install Node.js (includes npm)
-brew install node
+✅ **Secure JWT Authentication** - Stateless login with bcrypt password hashing  
+✅ **Workout Sessions** - Group exercises by date and type (Core, HIIT, Push, Pull, Legs, etc.)  
+✅ **Exercise Tracking** - Log sets with weight, reps, RPE ratings per set  
+✅ **Fuzzy Name Matching** - Levenshtein distance prevents duplicates from typos  
+✅ **Progress Analytics** - Track exercise improvements across multiple workouts  
+✅ **Detailed History** - Complete per-set information for all past workouts  
+✅ **Data Export** - JSON backup of complete hierarchical workout structure  
+✅ **Input Validation** - Client & server-side validation for data integrity
 
-# Install SQLite
-brew install sqlite3
+## 🔧 Key Implementation Details
 
-# Install Git
-brew install git
+### Exercise Name Normalization
 
-# Verify installation
-node --version    # Should show v18+
-npm --version     # Should show 9+
-sqlite3 --version # Should show version
+- Levenshtein distance algorithm for fuzzy matching
+- > 85% similarity threshold for automatic grouping
+- Displays longest/most complete name when matching variations
+- Prevents user frustration from typos fragmenting exercise data
+
+### Progress Tracking System
+
+- Aggregate exercise statistics across multiple workout sessions
+- Shows maximum weight lifted per exercise
+- Displays complete chronological set history with progression
+- Searches work with fuzzy matching (e.g., "chest pres" matches "chest press")
+
+### Database Schema
+
 ```
+workouts
+  ├─ id, date, workoutName
+  ├─ startTime, endTime, notes
+  └─ exercises (FK workoutId)
+       ├─ id, name, sets
+       ├─ setDetails (JSON: [{weight, reps, rpe}, ...])
+       └─ notes
 
-### Step 2: Install Dependencies
-
-```bash
-cd /Users/gvanvari/code/workout-tracker
-
-# Install root dependencies
-npm install
-
-# Install backend dependencies
-npm -C backend install
-cp backend/.env.example backend/.env
-
-# Install frontend dependencies
-npm -C frontend install
+Indexes: date, workoutId for fast queries
+Cascade delete for referential integrity
 ```
-
-### Step 3: Start Both Servers (Recommended)
-
-```bash
-cd /Users/gvanvari/code/workout-tracker
-npx concurrently "npm -C backend run dev" "npm -C frontend run dev"
-```
-
-Both servers will start together:
-
-- Backend: http://localhost:4000
-- Frontend: http://localhost:5173
-
-**Alternative: Run servers separately**
-
-**Terminal 1 - Backend**
-
-```bash
-cd /Users/gvanvari/code/workout-tracker/backend
-npm run dev
-# Output: "✅ Server running on http://localhost:4000"
-```
-
-**Terminal 2 - Frontend**
-
-```bash
-cd /Users/gvanvari/code/workout-tracker/frontend
-npm run dev
-# Output: "➜  Local:   http://localhost:5173/"
-```
-
-### Step 4: Access App
-
-Open **http://localhost:5173** in browser  
-**Login password**: `yourPassword`
-
----
 
 ## 📁 Project Structure
 
 ```
-workout-tracker/
-├── backend/
-│   ├── src/
-│   │   ├── index.ts         # Express server
-│   │   ├── database.ts      # SQLite setup
-│   │   ├── auth.ts          # Login logic
-│   │   ├── routes.ts        # API endpoints
-│   │   └── validators.ts    # Input validation
-│   ├── package.json
-│   ├── tsconfig.json
-│   ├── .env.example
-│   └── .gitignore
+├── frontend/                 # Vite + TypeScript SPA
+│   ├── src/main.ts          # 900+ lines: routing, rendering, state
+│   ├── src/api.ts           # API client with auth
+│   └── src/styles.css       # Component styling
 │
-├── frontend/
-│   ├── src/
-│   │   ├── main.ts          # App logic
-│   │   ├── api.ts           # API calls
-│   │   ├── styles.css       # Styling
-│   │   └── index.html       # HTML
-│   ├── package.json
-│   ├── vite.config.ts
-│   └── tsconfig.json
+├── backend/                  # Express + Node.js
+│   ├── src/index.ts         # Server, middleware setup
+│   ├── src/routes.ts        # 280+ lines: 10 REST endpoints
+│   ├── src/database.ts      # SQLite schema & init
+│   ├── src/validators.ts    # Input validation logic
+│   └── src/auth.ts          # JWT & password utilities
 │
-├── mvp-spec.md              # Technical spec
-├── tool-setup.md            # Tool installation
-└── README.md                # This file
+└── docs/
+    ├── README.md            # This file (technical overview)
+    ├── QUICKSTART.md        # 30-second setup
+    ├── SETUP.md             # Detailed installation
+    └── tool-setup.md        # Environment setup
 ```
+
+## 🎓 Software Engineering Concepts Demonstrated
+
+- **Separation of Concerns** - Frontend/backend/database layers
+- **Relational Database Design** - Foreign keys, normalization, cascade deletes
+- **RESTful API Design** - Standard HTTP methods, resource-oriented endpoints
+- **Authentication & Authorization** - JWT tokens, password hashing, rate limiting
+- **Input Validation** - Preventing injection attacks, type safety
+- **Error Handling** - Try-catch, validation errors, user feedback
+- **State Management** - Client-side routing and data synchronization
+- **Fuzzy Matching** - String similarity algorithms for user-friendly features
+- **Security Best Practices** - Parameterized queries, CORS, secure headers
+
+## 📊 API Summary
+
+**10 REST Endpoints:**
+
+- Auth: POST /api/auth/login
+- Workouts: GET/POST/PUT/DELETE /api/workouts
+- Exercises: POST/DELETE /api/exercises (requires workoutId)
+- Backup: GET /api/backup/export
+
+**Database:** SQLite with workouts + exercises tables (relational design)
+
+**Authentication:** JWT with 7-day expiration + rate limiting (5 attempts/15min)
 
 ---
 
-## 🔧 Development Commands
-
-**Backend:**
-
-```bash
-cd backend
-npm run dev     # Start with auto-reload
-npm run build   # Compile TypeScript
-npm start       # Run production
-```
-
-**Frontend:**
-
-```bash
-cd frontend
-npm run dev     # Start dev server
-npm run build   # Build for production
-npm run preview # Preview build
-```
-
----
-
-## 📡 API Endpoints
-
-### Authentication
-
-```
-POST /api/auth/login
-  Request: { "password": "string" }
-  Response: { "token": "jwt-token", "success": true }
-```
-
-### Exercises
-
-```
-GET    /api/exercises                    # List (filters: ?name=, ?startDate=, ?endDate=)
-POST   /api/exercises                    # Create
-GET    /api/exercises/:id                # Get one
-PUT    /api/exercises/:id                # Update
-DELETE /api/exercises/:id                # Delete
-GET    /api/backup/export                # Export JSON
-```
-
-### Request Body Example (POST /api/exercises)
-
-```json
-{
-  "date": "2025-01-20",
-  "name": "Squat",
-  "sets": 3,
-  "reps": "8,8,6",
-  "weight": 225,
-  "rpe": 8,
-  "notes": "Felt good"
-}
-```
-
----
-
-## 🗄️ Database
-
-SQLite database auto-created at `backend/data.db`
-
-**exercises table:**
-
-```
-id INTEGER PRIMARY KEY
-date TEXT (YYYY-MM-DD)
-name TEXT
-sets INTEGER (1-20)
-reps TEXT (comma-separated: "8,8,6")
-weight REAL (lbs)
-rpe INTEGER (1-10)
-notes TEXT
-created_at DATETIME
-updated_at DATETIME
-```
-
-**View data:**
-
-```bash
-sqlite3 backend/data.db
-> SELECT * FROM exercises;
-> .exit
-```
-
----
-
-## 🔒 Security
-
-- ✅ **Password Hashing** - bcrypt (10 rounds)
-- ✅ **SQL Injection Prevention** - Parameterized queries
-- ✅ **Input Validation** - All forms validated
-- ✅ **Rate Limiting** - 5 login attempts per 15 min
-- ✅ **CORS** - Restricted to localhost
-- ✅ **JWT** - 7-day token expiration
-- ✅ **Security Headers** - X-Content-Type-Options, X-Frame-Options, etc.
-
-See [mvp-spec.md](mvp-spec.md#5-security-implementation-checklist) for details.
-
----
-
-## 🧪 Test Endpoints
-
-### Using curl
-
-```bash
-# Login
-curl -X POST http://localhost:4000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"password":"yourPassword"}'
-
-# Add exercise
-curl -X POST http://localhost:4000/api/exercises \
-  -H "Content-Type: application/json" \
-  -d '{
-    "date":"2025-01-20",
-    "name":"Squat",
-    "sets":3,
-    "reps":"8,8,6",
-    "weight":225,
-    "rpe":8
-  }'
-
-# Get all exercises
-curl http://localhost:4000/api/exercises
-
-# Filter by name
-curl "http://localhost:4000/api/exercises?name=squat"
-```
-
-### Using Postman
-
-1. Download [Postman](https://www.postman.com/downloads/)
-2. Create new request
-3. Set method & URL
-4. Add headers/body
-5. Send
-
----
-
-## 🚨 Troubleshooting
-
-### "Port 4000 already in use"
-
-```bash
-lsof -i :4000       # Find process
-kill -9 <PID>       # Kill it
-# Or change PORT in backend/.env
-```
-
-### "npm: command not found"
-
-```bash
-brew uninstall node && brew install node
-node --version
-```
-
-### "sqlite3: command not found"
-
-```bash
-brew install sqlite3
-sqlite3 --version
-```
-
-### Frontend won't load
-
-```bash
-# Start backend first!
-cd backend && npm run dev
-# Then in new terminal:
-cd frontend && npm run dev
-```
-
-### Database locked
-
-```bash
-# Restart backend
-cd backend && npm run dev
-```
-
----
-
-## 📚 Full Documentation
-
-- **[mvp-spec.md](mvp-spec.md)** - Technical specification & architecture
-- **[tool-setup.md](tool-setup.md)** - Detailed tool installation guide
-
----
-
-## 📈 Future Features
-
-- [ ] AI workout recommendations (Python + OpenAI)
-- [ ] Progress charts
-- [ ] CSV export
-- [ ] Edit exercises from UI
-- [ ] Cloud backup
-- [ ] Mobile app
-
----
-
-## 🎯 Success Checklist
-
-- [ ] Dependencies installed (`npm install`)
-- [ ] Backend running on `http://localhost:4000`
-- [ ] Frontend running on `http://localhost:5173`
-- [ ] Can login (password: `yourPassword`)
-- [ ] Can add & view exercises
-- [ ] Can export data
-- [ ] Database created at `backend/data.db`
+**Note:** This is a complete MVP built for local use by a single user. It prioritizes educational value, clean architecture, and feature completeness over scalability.

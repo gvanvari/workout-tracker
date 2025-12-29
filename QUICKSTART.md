@@ -17,12 +17,14 @@ Then open http://localhost:5173 in your browser and login with `yourPassword`
 You now have a fully-functional workout tracking app with:
 
 ✅ **Backend API** running on http://localhost:4000
+
 - 6 REST endpoints for exercise management
 - SQLite database for local storage
 - Secure JWT authentication
 - Rate limiting and input validation
 
 ✅ **Frontend UI** running on http://localhost:5173
+
 - Login page with password authentication
 - Dashboard with statistics
 - Exercise add form with full validation
@@ -30,58 +32,10 @@ You now have a fully-functional workout tracking app with:
 - One-click data export
 
 ✅ **Local Database**
+
 - SQLite (zero config, file-based)
 - Auto-creates on first run
 - All data stored locally on your machine
-
----
-
-## Using the App
-
-### Login
-- Password: `yourPassword` (change in production!)
-
-### Add a Workout
-1. Click "Add Exercise"
-2. Fill in: date, name, sets, reps, weight, RPE, notes
-3. Click "Save Exercise"
-4. See it appear in Dashboard and History
-
-### View History
-- Click "History" to see all workouts
-- Filter by exercise name
-- Delete old entries if needed
-
-### Export Data
-- Click "Export Data" to download your workouts as JSON
-- Useful for backup or importing elsewhere
-
----
-
-## Project Structure
-
-```
-workout-tracker/
-├── backend/              # Express.js API
-│   └── src/              # TypeScript source
-│       ├── index.ts      # Server entry point
-│       ├── database.ts   # SQLite schema & init
-│       ├── auth.ts       # JWT + password auth
-│       ├── validators.ts # Input validation
-│       └── routes.ts     # API endpoints
-│
-├── frontend/             # Vite + TypeScript UI
-│   └── src/              # Source code
-│       ├── main.ts       # App logic & rendering
-│       ├── api.ts        # API client wrapper
-│       └── styles.css    # All styling
-│
-└── Config Files
-    ├── README.md         # Full documentation
-    ├── SETUP.md          # Detailed setup guide
-    ├── package.json      # Root scripts
-    └── .gitignore        # Git ignore rules
-```
 
 ---
 
@@ -111,6 +65,7 @@ npm -C backend run build
 Database file: `backend/workout.db` (SQLite)
 
 **Exercises Table:**
+
 - `id` - Unique identifier
 - `date` - YYYY-MM-DD format
 - `name` - Exercise name (required)
@@ -122,6 +77,7 @@ Database file: `backend/workout.db` (SQLite)
 - `created_at` / `updated_at` - Timestamps
 
 To reset database:
+
 ```bash
 rm backend/workout.db
 # Restart backend - it recreates empty DB
@@ -132,7 +88,9 @@ rm backend/workout.db
 ## Troubleshooting
 
 ### "Address already in use"
+
 Kill the process and restart:
+
 ```bash
 lsof -i :4000      # Find process on port 4000
 kill -9 <PID>      # Kill it
@@ -140,18 +98,22 @@ npm run dev        # Start again
 ```
 
 ### Module not found errors
+
 Re-install dependencies:
+
 ```bash
 rm -rf backend/node_modules frontend/node_modules
 ./setup.sh
 ```
 
 ### Login fails
+
 - Verify backend is running on port 4000
 - Check `backend/.env` for JWT_SECRET
 - Default password is: `yourPassword`
 
 ### TypeScript errors on startup
+
 These disappear after `npm install` completes. They're normal development-time errors before dependencies are installed.
 
 ---
@@ -161,6 +123,7 @@ These disappear after `npm install` completes. They're normal development-time e
 ⚠️ **Current Setup** is suitable for personal use only!
 
 For production deployment, you must:
+
 1. Change `JWT_SECRET` in `backend/.env` to a random 32+ character string
 2. Change the default password in `backend/src/auth.ts`
 3. Enable HTTPS/SSL
@@ -202,41 +165,3 @@ GET /api/backup/export
   Headers: Authorization: Bearer <token>
   Returns: JSON file of all exercises
 ```
-
----
-
-## Next Steps
-
-1. **Explore the Code**
-   - Frontend UI: `frontend/src/main.ts` (440+ lines, fully functional)
-   - Backend API: `backend/src/routes.ts` (all endpoints)
-   - Database: `backend/src/database.ts` (schema)
-
-2. **Customize**
-   - Edit `frontend/src/styles.css` for different look
-   - Change colors, fonts, layout
-   - Add new exercise fields
-
-3. **Deploy** (future)
-   - Build with `npm run build`
-   - Deploy backend to cloud (Heroku, Railway, DigitalOcean)
-   - Deploy frontend to static host (Vercel, Netlify)
-
-4. **Add Features** (future)
-   - AI form suggestions
-   - Progress charts
-   - Exercise library
-   - Mobile app
-
----
-
-## Support
-
-- **Full Docs**: See README.md
-- **Detailed Setup**: See SETUP.md
-- **Features & Requirements**: See mvp-spec.md
-- **Tool Setup**: See tool-setup.md
-
----
-
-**You're all set! Start tracking your workouts! 💪**
