@@ -29,13 +29,18 @@ const app = document.getElementById('app')!;
 
 // Predefined exercises
 const PREDEFINED_EXERCISES = [
-  'Bench Press', 'Squat', 'Deadlift', 'Barbell Row', 'Pull-ups',
-  'Dumbbell Press', 'Dumbbell Rows', 'Leg Press', 'Leg Curl', 'Leg Extension',
-  'Chest Press (Machine)', 'Chest Fly', 'Lat Pulldown', 'Cable Row', 'Shoulder Press',
-  'Lateral Raises', 'Bicep Curls', 'Tricep Dips', 'Tricep Pushdown', 'Planks',
-  'Pushups', 'Pull-up Negatives', 'Cable Fly', 'Incline Press', 'Decline Press',
-  'Cardio', 'Running', 'Cycling', 'Swimming', 'Rowing', 'Jump Rope', 'HIIT'
+'Chest Press Machine', 'Chest Press Dumbell' ,'Chest Press Barbell', 'Incline Chest Press Dumbell', 
+'Incline Chest Press Barbell', 'Decline Chest Press Barbell', 'Decline Chest Press Dumbell',
+'Back Lat Pulldown', 'Back Cable Row', 'Back Dumbell Row', 'Back Pull-ups', 'Back Chin-ups', 
+'Back Overhead Pulldown', 'Bicep Curls', 'Bicep Hammer Curls', 'Bicep Concentration Curls', 
+'Bicep Preacher Curls', 'Tricep Dips', 'Tricep Overhead Extension Dumbell', 'Tricep Rope Pushdown',
+'Shoulder Press', 'Shoulder Rear Delt Fly', 'Shoulder Lateral Raises Dumbell', 'Shoulder Front Raises Dumbell',
+'Squats', 'Pop Squats', 'Leg Press', 'Leg Curl', 'Leg Extension', 'Lunges', 'Side lunges', 'Calf Raises',
+'Deadlifts', 'Single leg deadlifts', 'Hip Thrusts', 'Glute Bridge',
+'Plank', 'Side Plank','Crunches', 'Russian Twists', 'Leg Raises',
+'Burpees', 'Mountain Climbers', 'Jumping Jacks'
 ];
+  
 
 // Normalize exercise name for consistency
 function normalizeExerciseName(name: string): string {
