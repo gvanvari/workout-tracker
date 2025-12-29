@@ -20,11 +20,194 @@ interface Exercise {
 }
 
 let token: string = '';
-let currentPage: 'login' | 'dashboard' | 'add' | 'history' = 'login';
+let currentPage: 'login' | 'dashboard' | 'add' | 'history' | 'progress' | 'exercise-detail' = 'login';
 let workouts: Workout[] = [];
 let currentWorkout: Workout | null = null;
+let selectedExerciseName: string | null = null;
 
 const app = document.getElementById('app')!;
+
+// Predefined exercises
+const PREDEFINED_EXERCISES = [
+  'Bench Press', 'Squat', 'Deadlift', 'Barbell Row', 'Pull-ups',
+  'Dumbbell Press', 'Dumbbell Rows', 'Leg Press', 'Leg Curl', 'Leg Extension',
+  'Chest Press (Machine)', 'Chest Fly', 'Lat Pulldown', 'Cable Row', 'Shoulder Press',
+  'Lateral Raises', 'Bicep Curls', 'Tricep Dips', 'Tricep Pushdown', 'Planks',
+  'Pushups', 'Pull-up Negatives', 'Cable Fly', 'Incline Press', 'Decline Press',
+  'Cardio', 'Running', 'Cycling', 'Swimming', 'Rowing', 'Jump Rope', 'HIIT'
+];
+
+// Normalize exercise name for consistency
+function normalizeExerciseName(name: string): string {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, ' ') // collapse multiple spaces
+    .replace(/[,!?.]/g, ''); // remove punctuation
+}
+
+// Levenshtein Distance - calculate how different two strings are
+function levenshteinDistance(s1: string, s2: string): number {
+  const str1 = normalizeExerciseName(s1);
+  const str2 = normalizeExerciseName(s2);
+  
+  const matrix: number[][] = [];
+  
+  for (let i = 0; i <= str2.length; i++) {
+    matrix[i] = [i];
+  }
+  
+  for (let j = 0; j <= str1.length; j++) {
+    matrix[0][j] = j;
+  }
+  
+  for (let i = 1; i <= str2.length; i++) {
+    for (let j = 1; j <= str1.length; j++) {
+      if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j] + 1
+        );
+      }
+    }
+  }
+  
+  return matrix[str2.length][str1.length];
+}
+
+// Calculate similarity percentage
+function calculateSimilarity(input: string, pastExercise: string): number {
+  const distance = levenshteinDistance(input, pastExercise);
+  const maxLength = Math.max(normalizeExerciseName(input).length, normalizeExerciseName(pastExercise).length);
+  if (maxLength === 0) return 100;
+  return ((maxLength - distance) / maxLength) * 100;
+}
+
+// Get exercise suggestions from past exercises
+function getSuggestions(userInput: string, pastExercises: string[]): string[] {
+  if (!userInput || userInput.length < 2) return [];
+  
+  return pastExercises
+    .filter((ex, idx, arr) => arr.indexOf(ex) === idx) // unique
+    .map(ex => ({
+      name: ex,
+      similarity: calculateSimilarity(userInput, ex)
+    }))
+    .filter(s => s.similarity > 75) // >75% match
+    .sort((a, b) => b.similarity - a.similarity)
+    .slice(0, 3) // max 3 suggestions
+    .map(s => s.name);
+}
+
+// Get all unique exercises across all workouts
+function getUniqueExercises(): Array<{ name: string; count: number; maxWeight?: number }> {
+  console.log('🔍 getUniqueExercises called with', workouts.length, 'workouts');
+  const exerciseMap = new Map<string, { name: string; count: number; maxWeight: number }>();
+  
+  workouts.forEach((workout, wIdx) => {
+    console.log(`  Workout ${wIdx + 1}:`, workout.date, workout.workoutName, '- exercises:', workout.exercises?.length || 0);
+    (workout.exercises || []).forEach(ex => {
+      const normalized = ex.name.toLowerCase().trim();
+      console.log(`    Exercise: ${ex.name} (normalized: ${normalized}), setDetails:`, ex.setDetails);
+      
+      let maxWeight = 0;
+      if (ex.setDetails) {
+        try {
+          const setDetails = typeof ex.setDetails === 'string' ? JSON.parse(ex.setDetails) : ex.setDetails;
+          if (Array.isArray(setDetails)) {
+            maxWeight = Math.max(...setDetails.map((s: any) => s.weight || 0));
+          }
+        } catch {}
+      }
+      
+      // Try to find similar exercise using fuzzy matching
+      let foundKey: string | null = null;
+      for (const [key] of exerciseMap) {
+        const similarity = calculateSimilarity(normalized, key);
+        if (similarity > 85) { // Match if >85% similar
+          console.log(`      ✓ Matched to existing: "${key}" (${similarity.toFixed(0)}% similar)`);
+          foundKey = key;
+          break;
+        }
+      }
+      
+      if (foundKey) {
+        // Add to existing exercise
+        const current = exerciseMap.get(foundKey)!;
+        current.count++;
+        current.maxWeight = Math.max(current.maxWeight, maxWeight);
+        // Update name to the longer one (assumes longer = more complete/correct spelling)
+        if (ex.name.length > current.name.length) {
+          current.name = ex.name;
+          console.log(`      📝 Updated display name to: "${ex.name}"`);
+        }
+      } else {
+        // Create new exercise entry - use the original name as provided
+        exerciseMap.set(normalized, { name: ex.name, count: 1, maxWeight });
+        console.log(`      ➕ Created new exercise: "${normalized}" with display name: "${ex.name}"`);
+      }
+    });
+  });
+  
+  const result = Array.from(exerciseMap.entries())
+    .map(([_, data]) => data)
+    .sort((a, b) => b.count - a.count);
+  
+  console.log('📊 Unique exercises found:', result);
+  return result;
+}
+
+// Get all instances of a specific exercise
+function getExerciseHistory(exerciseName: string): Array<{
+  date: string;
+  workoutName: string;
+  sets: number;
+  setDetails: any[];
+  notes?: string;
+}> {
+  const normalized = exerciseName.toLowerCase().trim();
+  const history: Array<{
+    date: string;
+    workoutName: string;
+    sets: number;
+    setDetails: any[];
+    notes?: string;
+  }> = [];
+  
+  workouts.forEach(workout => {
+    (workout.exercises || []).forEach(ex => {
+      const exNormalized = ex.name.toLowerCase().trim();
+      // Use fuzzy matching: match if >85% similar
+      const similarity = calculateSimilarity(exNormalized, normalized);
+      if (similarity > 85) {
+        console.log(`  Matched exercise: "${ex.name}" to "${exerciseName}" (${similarity.toFixed(0)}% similar)`);
+        try {
+          const setDetails = typeof ex.setDetails === 'string' ? JSON.parse(ex.setDetails) : (ex.setDetails || []);
+          history.push({
+            date: workout.date,
+            workoutName: workout.workoutName,
+            sets: ex.sets,
+            setDetails: Array.isArray(setDetails) ? setDetails : [],
+            notes: ex.notes
+          });
+        } catch {
+          history.push({
+            date: workout.date,
+            workoutName: workout.workoutName,
+            sets: ex.sets,
+            setDetails: [],
+            notes: ex.notes
+          });
+        }
+      }
+    });
+  });
+  
+  return history.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+}
 
 // Check token expiration
 function isTokenExpired(token: string): boolean {
@@ -84,6 +267,7 @@ function renderDashboard() {
       <button class="nav-btn active" onclick="goToPage('dashboard')">Dashboard</button>
       <button class="nav-btn" onclick="goToPage('add')">Start Workout</button>
       <button class="nav-btn" onclick="goToPage('history')">History</button>
+      <button class="nav-btn" onclick="goToPage('progress')">Progress</button>
       <button class="btn-secondary" onclick="handleExport()">Export Data</button>
     </div>
 
@@ -147,6 +331,7 @@ function renderStartWorkoutPage() {
       <button class="nav-btn" onclick="goToPage('dashboard')">Dashboard</button>
       <button class="nav-btn active" onclick="goToPage('add')">Start Workout</button>
       <button class="nav-btn" onclick="goToPage('history')">History</button>
+      <button class="nav-btn" onclick="goToPage('progress')">Progress</button>
       <button class="btn-secondary" onclick="handleExport()">Export Data</button>
     </div>
 
@@ -201,6 +386,7 @@ function renderAddExercisePage() {
       <button class="nav-btn" onclick="goToPage('dashboard')">Dashboard</button>
       <button class="nav-btn active" onclick="goToPage('add')">Add Exercise</button>
       <button class="nav-btn" onclick="goToPage('history')">History</button>
+      <button class="nav-btn" onclick="goToPage('progress')">Progress</button>
       <button class="btn-secondary" onclick="handleExport()">Export Data</button>
     </div>
 
@@ -213,7 +399,19 @@ function renderAddExercisePage() {
 
       <div class="form-group">
         <label for="name">Exercise Name:</label>
-        <input type="text" id="name" placeholder="e.g., Squat, Bench Press" required />
+        <div class="exercise-input-wrapper">
+          <input type="text" id="name" placeholder="Search or type exercise..." required oninput="handleExerciseInput()" />
+          <div id="exercise-suggestions" class="exercise-suggestions hidden"></div>
+        </div>
+        <div class="predefined-exercises-hint">
+          <small>Quick select: </small>
+          <div class="predefined-buttons">
+            ${PREDEFINED_EXERCISES.slice(0, 5).map(ex => `
+              <button type="button" class="predefined-btn" onclick="selectExercise('${ex}')">${ex}</button>
+            `).join('')}
+            <button type="button" class="predefined-btn more-btn" onclick="showAllExercises()">+${PREDEFINED_EXERCISES.length - 5} more</button>
+          </div>
+        </div>
       </div>
 
       <div class="form-group">
@@ -295,6 +493,7 @@ function renderHistoryPage() {
       <button class="nav-btn" onclick="goToPage('dashboard')">Dashboard</button>
       <button class="nav-btn" onclick="goToPage('add')">Start Workout</button>
       <button class="nav-btn active" onclick="goToPage('history')">History</button>
+      <button class="nav-btn" onclick="goToPage('progress')">Progress</button>
       <button class="btn-secondary" onclick="handleExport()">Export Data</button>
     </div>
 
@@ -337,6 +536,119 @@ function renderHistoryPage() {
                   </div>
                 `).join('')}
               </div>
+            </div>
+          `).join('')}
+        </div>
+      `}
+    </div>
+  `;
+
+  updateNavButtons();
+}
+
+function renderExerciseProgressPage() {
+  console.log('🎯 renderExerciseProgressPage called');
+  console.log('   Current workouts in state:', workouts.length);
+  const exercises = getUniqueExercises();
+  console.log('   Exercises to display:', exercises.length, exercises);
+
+  app.innerHTML = `
+    <div class="header">
+      <h1>💪 Workout Tracker</h1>
+      <button class="logout-btn" onclick="handleLogout()">Logout</button>
+    </div>
+
+    <div class="nav">
+      <button class="nav-btn" onclick="goToPage('dashboard')">Dashboard</button>
+      <button class="nav-btn" onclick="goToPage('add')">Start Workout</button>
+      <button class="nav-btn" onclick="goToPage('history')">History</button>
+      <button class="nav-btn active" onclick="goToPage('progress')">Progress</button>
+      <button class="btn-secondary" onclick="handleExport()">Export Data</button>
+    </div>
+
+    <div class="progress-container">
+      <h2>Exercise Progress</h2>
+      <p style="color: #666; margin-bottom: 20px;">Track your exercises across all workouts</p>
+
+      ${exercises.length === 0 ? `
+        <div class="empty-state">
+          <p>No exercises recorded yet.</p>
+        </div>
+      ` : `
+        <div class="exercise-progress-list">
+          ${exercises.map(ex => `
+            <div class="exercise-progress-card" onclick="handleSelectExercise('${ex.name.replace(/'/g, "\\'")}')">
+              <div class="exercise-progress-header">
+                <h3>${ex.name}</h3>
+                <span class="exercise-count">${ex.count} workouts</span>
+              </div>
+              <div class="exercise-progress-stats">
+                ${ex.maxWeight ? `<div class="stat">Max Weight: <strong>${ex.maxWeight} lbs</strong></div>` : ''}
+              </div>
+              <div class="exercise-progress-action">View Details →</div>
+            </div>
+          `).join('')}
+        </div>
+      `}
+    </div>
+  `;
+
+  updateNavButtons();
+}
+
+function renderExerciseDetailPage() {
+  if (!selectedExerciseName) {
+    renderExerciseProgressPage();
+    return;
+  }
+
+  const history = getExerciseHistory(selectedExerciseName);
+
+  app.innerHTML = `
+    <div class="header">
+      <h1>💪 Workout Tracker</h1>
+      <button class="logout-btn" onclick="handleLogout()">Logout</button>
+    </div>
+
+    <div class="nav">
+      <button class="nav-btn" onclick="goToPage('dashboard')">Dashboard</button>
+      <button class="nav-btn" onclick="goToPage('add')">Start Workout</button>
+      <button class="nav-btn" onclick="goToPage('history')">History</button>
+      <button class="nav-btn active" onclick="goToPage('progress')">Progress</button>
+      <button class="btn-secondary" onclick="handleExport()">Export Data</button>
+    </div>
+
+    <div class="progress-container">
+      <button class="btn-secondary" onclick="goToPage('progress')" style="margin-bottom: 20px;">← Back</button>
+      
+      <h2>${selectedExerciseName}</h2>
+      <p style="color: #666; margin-bottom: 20px;">${history.length} recorded instance${history.length !== 1 ? 's' : ''}</p>
+
+      ${history.length === 0 ? `
+        <div class="empty-state">
+          <p>No history found for this exercise.</p>
+        </div>
+      ` : `
+        <div class="exercise-detail-list">
+          ${history.map((instance, idx) => `
+            <div class="exercise-instance-card">
+              <div class="instance-header">
+                <span class="instance-date">${instance.date}</span>
+                <span class="instance-workout">${instance.workoutName}</span>
+              </div>
+              <div class="instance-sets">
+                ${instance.setDetails.length > 0 ? instance.setDetails.map((set, setIdx) => `
+                  <div class="instance-set">
+                    <span class="set-num">Set ${setIdx + 1}:</span>
+                    <span class="set-data">${set.weight} lbs × ${set.reps} reps @ RPE ${set.rpe}</span>
+                  </div>
+                `).join('') : `
+                  <div class="instance-set">
+                    <span style="color: #999;">No set details</span>
+                  </div>
+                `}
+              </div>
+              ${instance.notes ? `<div class="instance-notes">📝 ${instance.notes}</div>` : ''}
             </div>
           `).join('')}
         </div>
@@ -407,7 +719,7 @@ async function handleStartWorkout() {
 async function handleAddExercise() {
   if (!currentWorkout) return;
 
-  const name = (document.getElementById('name') as HTMLInputElement).value;
+  let name = (document.getElementById('name') as HTMLInputElement).value;
   const sets = parseInt((document.getElementById('sets') as HTMLInputElement).value);
   const notes = (document.getElementById('notes') as HTMLTextAreaElement).value;
   const errorDiv = document.getElementById('error')!;
@@ -415,6 +727,15 @@ async function handleAddExercise() {
 
   errorDiv.classList.add('hidden');
   successDiv.classList.add('hidden');
+
+  // Normalize exercise name
+  name = normalizeExerciseName(name);
+  
+  if (!name) {
+    errorDiv.textContent = 'Please enter an exercise name';
+    errorDiv.classList.remove('hidden');
+    return;
+  }
 
   try {
     const setDetails: any[] = [];
@@ -500,9 +821,75 @@ async function handleExport() {
   }
 }
 
+// ===== EXERCISE SUGGESTIONS & HELPERS =====
+
+function handleExerciseInput() {
+  const input = (document.getElementById('name') as HTMLInputElement).value;
+  const suggestionsDiv = document.getElementById('exercise-suggestions')!;
+
+  if (!input || input.length < 2) {
+    suggestionsDiv.classList.add('hidden');
+    return;
+  }
+
+  // Get all past exercise names
+  const pastExercises = workouts
+    .flatMap(w => (w.exercises || []).map(e => e.name))
+    .filter((name, idx, arr) => arr.indexOf(name) === idx); // unique
+
+  // Get matching suggestions
+  const suggestions = getSuggestions(input, pastExercises);
+
+  if (suggestions.length === 0) {
+    suggestionsDiv.classList.add('hidden');
+    return;
+  }
+
+  // Show suggestions
+  suggestionsDiv.innerHTML = suggestions
+    .map(suggestion => `
+      <div class="suggestion-item" onclick="selectExercise('${suggestion.replace(/'/g, "\\'")}'">
+        ${suggestion}
+      </div>
+    `)
+    .join('');
+  
+  suggestionsDiv.classList.remove('hidden');
+}
+
+function selectExercise(exerciseName: string) {
+  const input = document.getElementById('name') as HTMLInputElement;
+  input.value = exerciseName;
+  const suggestionsDiv = document.getElementById('exercise-suggestions')!;
+  suggestionsDiv.classList.add('hidden');
+}
+
+function showAllExercises() {
+  const input = document.getElementById('name') as HTMLInputElement;
+  
+  // Show all predefined exercises in a modal-like popup
+  const suggestionsDiv = document.getElementById('exercise-suggestions')!;
+  suggestionsDiv.innerHTML = PREDEFINED_EXERCISES
+    .map(ex => `
+      <div class="suggestion-item" onclick="selectExercise('${ex.replace(/'/g, "\\'")}'">
+        ${ex}
+      </div>
+    `)
+    .join('');
+  
+  suggestionsDiv.classList.remove('hidden');
+}
+
+function handleSelectExercise(exerciseName: string) {
+  selectedExerciseName = exerciseName;
+  currentPage = 'exercise-detail';
+  renderExerciseDetailPage();
+}
+
 // ===== NAVIGATION =====
 
-function goToPage(page: 'login' | 'dashboard' | 'add' | 'history') {
+function goToPage(page: 'login' | 'dashboard' | 'add' | 'history' | 'progress' | 'exercise-detail') {
+  console.log('🔄 goToPage called:', page);
   if (!token && page !== 'login') {
     goToPage('login');
     return;
@@ -510,9 +897,30 @@ function goToPage(page: 'login' | 'dashboard' | 'add' | 'history') {
   currentPage = page;
   
   if (page === 'login') renderLoginPage();
-  else if (page === 'dashboard') renderDashboard();
+  else if (page === 'dashboard') {
+    renderDashboard();
+    loadWorkouts();
+  }
   else if (page === 'add') renderAddExercisePage();
-  else if (page === 'history') renderHistoryPage();
+  else if (page === 'history') {
+    renderHistoryPage();
+    loadWorkouts();
+  }
+  else if (page === 'progress') {
+    console.log('📊 Progress page requested, current workouts:', workouts.length);
+    // Load workouts and render progress page
+    API.getWorkouts(token).then(data => {
+      console.log('✅ API.getWorkouts returned:', data.length, 'workouts');
+      workouts = data;
+      console.log('📝 Updated workouts array:', workouts.length);
+      console.log('🏋️ Workouts data:', workouts);
+      renderExerciseProgressPage();
+    }).catch(error => {
+      console.error('❌ Failed to load workouts:', error);
+      renderExerciseProgressPage();
+    });
+  }
+  else if (page === 'exercise-detail') renderExerciseDetailPage();
 }
 
 async function loadWorkouts() {
@@ -520,6 +928,7 @@ async function loadWorkouts() {
     workouts = await API.getWorkouts(token);
     if (currentPage === 'dashboard') renderDashboard();
     else if (currentPage === 'history') renderHistoryPage();
+    else if (currentPage === 'progress') renderExerciseProgressPage();
   } catch (error: any) {
     console.error('Failed to load workouts:', error);
   }
@@ -551,3 +960,7 @@ async function loadWorkouts() {
 (window as any).handleExport = handleExport;
 (window as any).goToPage = goToPage;
 (window as any).updateSetInputs = updateSetInputs;
+(window as any).handleExerciseInput = handleExerciseInput;
+(window as any).selectExercise = selectExercise;
+(window as any).showAllExercises = showAllExercises;
+(window as any).handleSelectExercise = handleSelectExercise;

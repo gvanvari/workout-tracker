@@ -515,3 +515,251 @@ tr:hover {
   font-style: italic;
   color: #888;
 }
+
+/* Exercise Input & Suggestions */
+.exercise-input-wrapper {
+  position: relative;
+}
+
+.exercise-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: white;
+  border: 1px solid #3498db;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 100;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.suggestion-item {
+  padding: 12px 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 14px;
+  color: #333;
+  transition: background-color 0.2s;
+}
+
+.suggestion-item:hover {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.predefined-exercises-hint {
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  border-left: 3px solid #3498db;
+}
+
+.predefined-exercises-hint small {
+  display: block;
+  color: #7f8c8d;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.predefined-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.predefined-btn {
+  background-color: #ecf0f1;
+  color: #2c3e50;
+  border: 1px solid #bdc3c7;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.predefined-btn:hover {
+  background-color: #3498db;
+  color: white;
+  border-color: #3498db;
+}
+
+.predefined-btn.more-btn {
+  background-color: #3498db;
+  color: white;
+  border-color: #3498db;
+  font-weight: 600;
+}
+
+.predefined-btn.more-btn:hover {
+  background-color: #2980b9;
+  border-color: #2980b9;
+}
+/* Exercise Progress Page */
+.progress-container {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.progress-container h2 {
+  color: #2c3e50;
+  margin-bottom: 10px;
+  font-size: 24px;
+}
+
+.exercise-progress-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.exercise-progress-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 8px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+}
+
+.exercise-progress-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+}
+
+.exercise-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 15px;
+}
+
+.exercise-progress-header h3 {
+  font-size: 20px;
+  margin: 0;
+  flex: 1;
+  word-wrap: break-word;
+}
+
+.exercise-count {
+  background-color: rgba(255, 255, 255, 0.3);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  margin-left: 10px;
+}
+
+.exercise-progress-stats {
+  flex: 1;
+  margin-bottom: 10px;
+}
+
+.exercise-progress-stats .stat {
+  font-size: 14px;
+  opacity: 0.95;
+  margin-bottom: 5px;
+}
+
+.exercise-progress-action {
+  font-size: 12px;
+  opacity: 0.8;
+  font-weight: 600;
+  margin-top: auto;
+}
+
+/* Exercise Detail Page */
+.exercise-detail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.exercise-instance-card {
+  background-color: #f9f9f9;
+  border-left: 5px solid #667eea;
+  border-radius: 4px;
+  padding: 15px;
+  transition: all 0.3s ease;
+}
+
+.exercise-instance-card:hover {
+  background-color: #fff;
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.15);
+}
+
+.instance-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.instance-date {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 14px;
+}
+
+.instance-workout {
+  background-color: #667eea;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.instance-sets {
+  margin-bottom: 10px;
+}
+
+.instance-set {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  font-size: 13px;
+}
+
+.set-num {
+  font-weight: 600;
+  color: #667eea;
+  min-width: 60px;
+}
+
+.set-data {
+  color: #555;
+  font-family: 'Courier New', monospace;
+  background-color: rgba(102, 126, 234, 0.08);
+  padding: 4px 8px;
+  border-radius: 3px;
+}
+
+.instance-notes {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #e0e0e0;
+  font-size: 13px;
+  color: #666;
+  font-style: italic;
+}
