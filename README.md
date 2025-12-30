@@ -1,6 +1,24 @@
-# 💪 Workout Tracker MVP
+# 💪 Workout Tracker
 
 Single-user fitness tracker demonstrating API design, data modeling, and security patterns.
+
+## Screenshots
+
+### Dashboard
+
+![dashboard](./images/dashboard.png)
+
+### Add Workout
+
+![workout](./images/add-workout.png)
+
+### Progress
+
+![progress](./images/progress.png)
+
+### History
+
+![history](./images/history.png)
 
 ## 🎯 Core Implementation
 

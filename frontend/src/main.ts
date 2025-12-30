@@ -832,6 +832,8 @@ function handleExerciseInput() {
   const input = (document.getElementById('name') as HTMLInputElement).value;
   const suggestionsDiv = document.getElementById('exercise-suggestions')!;
 
+  console.log('🔍 handleExerciseInput called with:', input);
+
   if (!input || input.length < 2) {
     suggestionsDiv.classList.add('hidden');
     return;
@@ -842,31 +844,70 @@ function handleExerciseInput() {
     .flatMap(w => (w.exercises || []).map(e => e.name))
     .filter((name, idx, arr) => arr.indexOf(name) === idx); // unique
 
-  // Get matching suggestions
-  const suggestions = getSuggestions(input, pastExercises);
+  console.log('📚 Past exercises found:', pastExercises.length);
 
-  if (suggestions.length === 0) {
+  // Get matching suggestions from past exercises
+  const pastSuggestions = getSuggestions(input, pastExercises);
+  
+  // Get matching predefined exercises
+  const predefinedSuggestions = getSuggestions(input, PREDEFINED_EXERCISES);
+  
+  // Combine and deduplicate
+  const allSuggestions = Array.from(
+    new Set([...pastSuggestions, ...predefinedSuggestions])
+  );
+
+  console.log('✅ Total suggestions:', allSuggestions.length);
+
+  if (allSuggestions.length === 0) {
     suggestionsDiv.classList.add('hidden');
     return;
   }
 
   // Show suggestions
-  suggestionsDiv.innerHTML = suggestions
-    .map(suggestion => `
-      <div class="suggestion-item" onclick="selectExercise('${suggestion.replace(/'/g, "\\'")}'">
-        ${suggestion}
-      </div>
-    `)
+  suggestionsDiv.innerHTML = allSuggestions
+    .map(suggestion => `<div class="suggestion-item" data-exercise="${suggestion}">${suggestion}</div>`)
     .join('');
+  
+  // Attach click listeners to suggestion items
+  attachSuggestionListeners(suggestionsDiv);
   
   suggestionsDiv.classList.remove('hidden');
 }
 
+function attachSuggestionListeners(suggestionsDiv: HTMLElement) {
+  const items = suggestionsDiv.querySelectorAll('.suggestion-item');
+  items.forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const exerciseName = item.getAttribute('data-exercise');
+      if (exerciseName) {
+        selectExercise(exerciseName);
+      }
+    });
+  });
+}
+
 function selectExercise(exerciseName: string) {
+  console.log('✏️ selectExercise called with:', exerciseName);
+  
   const input = document.getElementById('name') as HTMLInputElement;
+  if (!input) {
+    console.error('❌ Could not find name input');
+    return;
+  }
+  
   input.value = exerciseName;
+  
   const suggestionsDiv = document.getElementById('exercise-suggestions')!;
+  if (!suggestionsDiv) {
+    console.error('❌ Could not find suggestions div');
+    return;
+  }
+  
   suggestionsDiv.classList.add('hidden');
+  console.log('✅ Exercise selected and dropdown hidden');
 }
 
 function showAllExercises() {
@@ -875,12 +916,11 @@ function showAllExercises() {
   // Show all predefined exercises in a modal-like popup
   const suggestionsDiv = document.getElementById('exercise-suggestions')!;
   suggestionsDiv.innerHTML = PREDEFINED_EXERCISES
-    .map(ex => `
-      <div class="suggestion-item" onclick="selectExercise('${ex.replace(/'/g, "\\'")}'">
-        ${ex}
-      </div>
-    `)
+    .map(ex => `<div class="suggestion-item" data-exercise="${ex}">${ex}</div>`)
     .join('');
+  
+  // Attach click listeners to suggestion items
+  attachSuggestionListeners(suggestionsDiv);
   
   suggestionsDiv.classList.remove('hidden');
 }
@@ -931,6 +971,16 @@ function goToPage(page: 'login' | 'dashboard' | 'add' | 'history' | 'progress' |
 async function loadWorkouts() {
   try {
     workouts = await API.getWorkouts(token);
+    
+    // Sort workouts by date (newest first)
+    workouts.sort((a, b) => {
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
+      return dateB - dateA; // descending order (newest first)
+    });
+    
+    console.log('📊 Workouts loaded and sorted:', workouts.length, 'workouts');
+    
     if (currentPage === 'dashboard') renderDashboard();
     else if (currentPage === 'history') renderHistoryPage();
     else if (currentPage === 'progress') renderExerciseProgressPage();
@@ -969,3 +1019,4 @@ async function loadWorkouts() {
 (window as any).selectExercise = selectExercise;
 (window as any).showAllExercises = showAllExercises;
 (window as any).handleSelectExercise = handleSelectExercise;
+(window as any).attachSuggestionListeners = attachSuggestionListeners;
