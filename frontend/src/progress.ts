@@ -1,5 +1,5 @@
 import type { Workout } from './types';
-import { updateNavButtons } from './ui';
+import { updateNavButtons } from './loginPage';
 import { getUniqueExercises, getExerciseHistory } from './exerciseUtils';
 
 export function renderExerciseProgressPage(app: HTMLElement, workouts: Workout[]) {

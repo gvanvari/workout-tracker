@@ -1,6 +1,6 @@
 import * as API from './api';
 import type { Workout, Exercise } from './types';
-import { updateNavButtons } from './ui';
+import { updateNavButtons } from './loginPage';
 import { getSuggestions, normalizeExerciseName, PREDEFINED_EXERCISES } from './exerciseUtils';
 
 export function renderStartWorkoutPage(app: HTMLElement) {

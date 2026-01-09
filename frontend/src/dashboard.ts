@@ -1,10 +1,9 @@
 import type { Workout } from './types';
-import { updateNavButtons } from './ui';
+import { updateNavButtons } from './loginPage';
 
 export function renderDashboard(
   app: HTMLElement,
-  workouts: Workout[],
-  onGoToPage?: (page: string) => void
+  workouts: Workout[]
 ) {
   const lastWorkout = workouts.length > 0 ? workouts[0] : null;
 

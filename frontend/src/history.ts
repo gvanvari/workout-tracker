@@ -1,6 +1,6 @@
 import * as API from './api';
 import type { Workout } from './types';
-import { updateNavButtons } from './ui';
+import { updateNavButtons } from './loginPage';
 
 export function renderHistoryPage(app: HTMLElement, workouts: Workout[]) {
   app.innerHTML = `

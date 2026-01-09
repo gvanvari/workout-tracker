@@ -16,3 +16,5 @@ export interface Exercise {
   setDetails?: string | any[] | null;
   notes?: string;
 }
+
+export type PageType = 'login' | 'dashboard' | 'add' | 'history' | 'progress' | 'exercise-detail';

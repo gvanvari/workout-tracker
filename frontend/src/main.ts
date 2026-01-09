@@ -1,15 +1,15 @@
 import * as API from './api';
-import type { Workout } from './types';
+import type { Workout, PageType } from './types';
 import { isTokenExpired, handleLogin, handleLogout } from './auth';
 import { renderDashboard } from './dashboard';
 import { renderStartWorkoutPage, renderAddExercisePage, handleStartWorkout, handleAddExercise, handleFinishWorkout, handleDeleteExercise, handleExerciseInput, selectExercise, showAllExercises, updateSetInputs, attachSuggestionListeners } from './workout';
 import { renderHistoryPage, handleDeleteWorkout as workoutDeleteHandler } from './history';
 import { renderExerciseProgressPage, renderExerciseDetailPage, handleSelectExercise } from './progress';
 import { handleExport } from './exportData';
-import { renderLoginPage } from './ui';
+import { renderLoginPage } from './loginPage';
 
 let token: string = '';
-let currentPage: 'login' | 'dashboard' | 'add' | 'history' | 'progress' | 'exercise-detail' = 'login';
+let currentPage: PageType = 'login';
 let workouts: Workout[] = [];
 let currentWorkout: Workout | null = null;
 let selectedExerciseName: string | null = null;
@@ -112,7 +112,7 @@ function handleSelectExerciseClick(exerciseName: string) {
 
 // ===== NAVIGATION =====
 
-function goToPage(page: 'login' | 'dashboard' | 'add' | 'history' | 'progress' | 'exercise-detail') {
+function goToPage(page: PageType) {
   if (!token && page !== 'login') {
     goToPage('login');
     return;
@@ -122,7 +122,7 @@ function goToPage(page: 'login' | 'dashboard' | 'add' | 'history' | 'progress' |
   if (page === 'login') {
     renderLoginPage(app);
   } else if (page === 'dashboard') {
-    renderDashboard(app, workouts, goToPage);
+    renderDashboard(app, workouts);
     loadWorkouts();
   } else if (page === 'add') {
     renderAddExercisePage(app, currentWorkout, workouts);
@@ -153,7 +153,7 @@ async function loadWorkouts() {
       return dateB - dateA;
     });
 
-    if (currentPage === 'dashboard') renderDashboard(app, workouts, goToPage);
+    if (currentPage === 'dashboard') renderDashboard(app, workouts);
     else if (currentPage === 'history') renderHistoryPage(app, workouts);
     else if (currentPage === 'progress') renderExerciseProgressPage(app, workouts);
   } catch (error: any) {
