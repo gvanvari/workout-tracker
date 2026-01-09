@@ -116,6 +116,6 @@ export function renderExerciseDetailPage(
   updateNavButtons('progress');
 }
 
-export function handleSelectExercise(exerciseName: string, onSuccess: (name: string) => void) {
-  onSuccess(exerciseName);
+export function handleSelectExercise(exerciseName: string): string {
+  return exerciseName;
 }

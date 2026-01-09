@@ -172,37 +172,32 @@ export function updateSetInputs() {
 }
 
 export async function handleStartWorkout(
-  token: string,
-  onSuccess: (workout: Workout) => void,
-  onError: (message: string) => void
-) {
+  token: string
+): Promise<Workout> {
   const date = (document.getElementById('date') as HTMLInputElement).value;
   const workoutName = (document.getElementById('workoutName') as HTMLSelectElement).value;
   const errorDiv = document.getElementById('error')!;
 
   if (!workoutName) {
-    errorDiv.textContent = 'Please select a workout type';
-    errorDiv.classList.remove('hidden');
-    return;
+    throw new Error('Please select a workout type');
   }
 
   try {
     errorDiv.classList.add('hidden');
     const workout = await API.createWorkout(token, { date, workoutName });
-    onSuccess(workout);
+    return workout;
   } catch (error: any) {
     errorDiv.textContent = error.message;
     errorDiv.classList.remove('hidden');
+    throw error;
   }
 }
 
 export async function handleAddExercise(
   token: string,
   currentWorkout: Workout,
-  workouts: Workout[],
-  onSuccess: () => void,
-  onError: (message: string) => void
-) {
+  workouts: Workout[]
+): Promise<void> {
   let name = (document.getElementById('name') as HTMLInputElement).value;
   const sets = parseInt((document.getElementById('sets') as HTMLInputElement).value);
   const notes = (document.getElementById('notes') as HTMLTextAreaElement).value;
@@ -215,9 +210,7 @@ export async function handleAddExercise(
   name = normalizeExerciseName(name);
 
   if (!name) {
-    errorDiv.textContent = 'Please enter an exercise name';
-    errorDiv.classList.remove('hidden');
-    return;
+    throw new Error('Please enter an exercise name');
   }
 
   try {
@@ -248,41 +241,29 @@ export async function handleAddExercise(
 
     (document.getElementById('name') as HTMLInputElement).value = '';
     (document.getElementById('notes') as HTMLTextAreaElement).value = '';
-    onSuccess();
   } catch (error: any) {
     errorDiv.textContent = error.message;
     errorDiv.classList.remove('hidden');
+    throw error;
   }
 }
 
 export async function handleFinishWorkout(
   token: string,
-  currentWorkout: Workout,
-  onSuccess: () => void
-) {
-  try {
-    await API.finishWorkout(token, currentWorkout.id!);
-    onSuccess();
-  } catch (error: any) {
-    console.error('Error finishing workout:', error);
-  }
+  currentWorkout: Workout
+): Promise<void> {
+  await API.finishWorkout(token, currentWorkout.id!);
 }
 
 export async function handleDeleteExercise(
   token: string,
   currentWorkout: Workout,
-  exerciseId: number,
-  onSuccess: () => void
-) {
+  exerciseId: number
+): Promise<void> {
   if (!confirm('Delete this exercise?')) return;
 
-  try {
-    await API.deleteExercise(token, exerciseId);
-    currentWorkout.exercises = currentWorkout.exercises!.filter(e => e.id !== exerciseId);
-    onSuccess();
-  } catch (error: any) {
-    console.error('Error deleting exercise:', error);
-  }
+  await API.deleteExercise(token, exerciseId);
+  currentWorkout.exercises = currentWorkout.exercises!.filter(e => e.id !== exerciseId);
 }
 
 export function handleExerciseInput(workouts: Workout[]) {

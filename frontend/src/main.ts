@@ -19,17 +19,19 @@ const app = document.getElementById('app')!;
 // ===== HANDLERS =====
 
 async function handleLoginClick() {
-  const password = (document.getElementById('password') as HTMLInputElement).value;
-  const errorDiv = document.getElementById('login-error')!;
+  try {
+    const password = (document.getElementById('password') as HTMLInputElement).value;
+    const errorDiv = document.getElementById('login-error')!;
+    errorDiv.classList.add('hidden');
 
-  handleLogin(password, (newToken: string) => {
-    token = newToken;
+    token = await handleLogin(password);
     goToPage('dashboard');
     loadWorkouts();
-  }, (error: string) => {
-    errorDiv.textContent = error;
+  } catch (error: any) {
+    const errorDiv = document.getElementById('login-error')!;
+    errorDiv.textContent = error.message;
     errorDiv.classList.remove('hidden');
-  });
+  }
 }
 
 function handleLogoutClick() {
@@ -40,51 +42,58 @@ function handleLogoutClick() {
 }
 
 async function handleStartWorkoutClick() {
-  handleStartWorkout(token, (workout: Workout) => {
+  try {
+    const workout = await handleStartWorkout(token);
     currentWorkout = { ...workout, exercises: [] };
     currentPage = 'add';
     renderAddExercisePage(app, currentWorkout, workouts);
-  }, (error: string) => {
-    const errorDiv = document.getElementById('error')!;
-    errorDiv.textContent = error;
-    errorDiv.classList.remove('hidden');
-  });
+  } catch (error: any) {
+    // Error already displayed in handleStartWorkout
+  }
 }
 
 async function handleAddExerciseClick() {
   if (!currentWorkout) return;
 
-  handleAddExercise(token, currentWorkout, workouts, () => {
+  try {
+    await handleAddExercise(token, currentWorkout, workouts);
     renderAddExercisePage(app, currentWorkout, workouts);
-  }, (error: string) => {
-    const errorDiv = document.getElementById('error')!;
-    errorDiv.textContent = error;
-    errorDiv.classList.remove('hidden');
-  });
+  } catch (error: any) {
+    // Error already displayed in handleAddExercise
+  }
 }
 
 async function handleFinishWorkoutClick() {
   if (!currentWorkout) return;
 
-  handleFinishWorkout(token, currentWorkout, () => {
+  try {
+    await handleFinishWorkout(token, currentWorkout);
     currentWorkout = null;
     goToPage('dashboard');
     loadWorkouts();
-  });
+  } catch (error: any) {
+    console.error('Error finishing workout:', error);
+  }
 }
 
 async function handleDeleteExerciseClick(id: number) {
   if (!currentWorkout) return;
 
-  handleDeleteExercise(token, currentWorkout, id, () => {
+  try {
+    await handleDeleteExercise(token, currentWorkout, id);
     renderAddExercisePage(app, currentWorkout, workouts);
-  });
+  } catch (error: any) {
+    console.error('Error deleting exercise:', error);
+  }
 }
 
 async function handleDeleteWorkoutClick(id: number) {
-  workoutDeleteHandler(token, id, () => {
+  try {
+    await workoutDeleteHandler(token, id);
     loadWorkouts();
-  });
+  } catch (error: any) {
+    console.error('Error deleting workout:', error);
+  }
 }
 
 async function handleExportClick() {
@@ -96,11 +105,9 @@ function handleExerciseInputClick() {
 }
 
 function handleSelectExerciseClick(exerciseName: string) {
-  handleSelectExercise(exerciseName, (name: string) => {
-    selectedExerciseName = name;
-    currentPage = 'exercise-detail';
-    renderExerciseDetailPage(app, selectedExerciseName, workouts);
-  });
+  selectedExerciseName = handleSelectExercise(exerciseName);
+  currentPage = 'exercise-detail';
+  renderExerciseDetailPage(app, selectedExerciseName, workouts);
 }
 
 // ===== NAVIGATION =====

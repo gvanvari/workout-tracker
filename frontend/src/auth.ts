@@ -14,19 +14,11 @@ export function isTokenExpired(token: string): boolean {
   }
 }
 
-export async function handleLogin(
-  password: string,
-  onSuccess: (token: string) => void,
-  onError: (message: string) => void
-) {
-  try {
-    const result = await API.login(password);
-    const token = result.token;
-    localStorage.setItem('token', token);
-    onSuccess(token);
-  } catch (error: any) {
-    onError(error.message);
-  }
+export async function handleLogin(password: string): Promise<string> {
+  const result = await API.login(password);
+  const token = result.token;
+  localStorage.setItem('token', token);
+  return token;
 }
 
 export function handleLogout() {

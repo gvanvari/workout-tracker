@@ -68,15 +68,9 @@ export function renderHistoryPage(app: HTMLElement, workouts: Workout[]) {
 
 export async function handleDeleteWorkout(
   token: string,
-  workoutId: number,
-  onSuccess: () => void
-) {
+  workoutId: number
+): Promise<void> {
   if (!confirm('Delete this entire workout?')) return;
 
-  try {
-    await API.deleteWorkout(token, workoutId);
-    onSuccess();
-  } catch (error: any) {
-    console.error('Error deleting workout:', error);
-  }
+  await API.deleteWorkout(token, workoutId);
 }
