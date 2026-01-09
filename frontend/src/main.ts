@@ -1,9 +1,9 @@
 import * as API from './api';
 import type { Workout } from './types';
-import { isTokenExpired, handleLogin as authHandleLogin, handleLogout as authHandleLogout } from './auth';
+import { isTokenExpired, handleLogin, handleLogout } from './auth';
 import { renderDashboard } from './dashboard';
-import { renderStartWorkoutPage, renderAddExercisePage, handleStartWorkout as workoutHandleStartWorkout, handleAddExercise, handleFinishWorkout, handleDeleteExercise, handleExerciseInput, selectExercise, showAllExercises, updateSetInputs, attachSuggestionListeners } from './workout';
-import { renderHistoryPage, handleDeleteWorkout } from './history';
+import { renderStartWorkoutPage, renderAddExercisePage, handleStartWorkout, handleAddExercise, handleFinishWorkout, handleDeleteExercise, handleExerciseInput, selectExercise, showAllExercises, updateSetInputs, attachSuggestionListeners } from './workout';
+import { renderHistoryPage, handleDeleteWorkout as workoutDeleteHandler } from './history';
 import { renderExerciseProgressPage, renderExerciseDetailPage, handleSelectExercise } from './progress';
 import { handleExport } from './exportData';
 import { renderLoginPage } from './ui';
@@ -18,11 +18,11 @@ const app = document.getElementById('app')!;
 
 // ===== HANDLERS =====
 
-async function handleLogin() {
+async function handleLoginClick() {
   const password = (document.getElementById('password') as HTMLInputElement).value;
   const errorDiv = document.getElementById('login-error')!;
 
-  authHandleLogin(password, (newToken: string) => {
+  handleLogin(password, (newToken: string) => {
     token = newToken;
     goToPage('dashboard');
     loadWorkouts();
@@ -32,15 +32,15 @@ async function handleLogin() {
   });
 }
 
-function handleLogout() {
-  authHandleLogout();
+function handleLogoutClick() {
+  handleLogout();
   token = '';
   currentWorkout = null;
   goToPage('login');
 }
 
-async function handleStartWorkout() {
-  workoutHandleStartWorkout(token, (workout: Workout) => {
+async function handleStartWorkoutClick() {
+  handleStartWorkout(token, (workout: Workout) => {
     currentWorkout = { ...workout, exercises: [] };
     currentPage = 'add';
     renderAddExercisePage(app, currentWorkout, workouts);
@@ -82,7 +82,7 @@ async function handleDeleteExerciseClick(id: number) {
 }
 
 async function handleDeleteWorkoutClick(id: number) {
-  handleDeleteWorkout(token, id, () => {
+  workoutDeleteHandler(token, id, () => {
     loadWorkouts();
   });
 }
@@ -170,9 +170,9 @@ async function loadWorkouts() {
 })();
 
 // Export functions for global use
-(window as any).handleLogin = handleLogin;
-(window as any).handleLogout = handleLogout;
-(window as any).handleStartWorkout = handleStartWorkout;
+(window as any).handleLogin = handleLoginClick;
+(window as any).handleLogout = handleLogoutClick;
+(window as any).handleStartWorkout = handleStartWorkoutClick;
 (window as any).handleAddExercise = handleAddExerciseClick;
 (window as any).handleFinishWorkout = handleFinishWorkoutClick;
 (window as any).handleDeleteExercise = handleDeleteExerciseClick;
