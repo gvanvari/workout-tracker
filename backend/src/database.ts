@@ -1,14 +1,25 @@
 import sqlite3 from 'sqlite3';
 import path from 'path';
+import fs from 'fs';
+import os from 'os';
 
 export function initializeDatabase(): sqlite3.Database {
-  const dbPath = process.env.DB_PATH || './data.db';
+  // Store database in user's home directory to persist across restarts
+  const dataDir = process.env.DB_PATH || path.join(os.homedir(), '.workout-tracker');
+  
+  // Create directory if it doesn't exist
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+    console.log(`📁 Created data directory: ${dataDir}`);
+  }
+  
+  const dbPath = path.join(dataDir, 'workouts.db');
   const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
       console.error('❌ Database connection error:', err);
       process.exit(1);
     }
-    console.log('✅ Database connected');
+    console.log(`✅ Database connected at: ${dbPath}`);
   });
 
   // Create tables

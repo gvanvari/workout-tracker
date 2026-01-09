@@ -10,10 +10,9 @@ node_modules/
 dist/
 build/
 
-# Database
-*.db
-*.sqlite
-*.sqlite3
+# Database (NOT stored in repo - persisted in user home directory)
+# Database lives at: ~/.workout-tracker/workouts.db
+# To backup: copy ~/.workout-tracker/workouts.db
 
 # Logs
 *.log
