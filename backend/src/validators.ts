@@ -1,6 +1,6 @@
 export function validateWorkout(data: { date?: unknown; workoutName?: unknown }): void {
   // Validate date format (YYYY-MM-DD)
-  if (!data.date || !/^\d{4}-\d{2}-\d{2}$/.test(data.date)) {
+  if (!data.date || typeof data.date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(data.date)) {
     throw new Error('Invalid date format (YYYY-MM-DD)');
   }
 
@@ -17,7 +17,7 @@ export function validateExercise(data: { name?: unknown; sets?: unknown; setDeta
   }
 
   // Validate sets
-  if (!Number.isInteger(data.sets) || data.sets < 1 || data.sets > 20) {
+  if (typeof data.sets !== 'number' || !Number.isInteger(data.sets) || data.sets < 1 || data.sets > 20) {
     throw new Error('Sets must be between 1 and 20');
   }
 
@@ -40,19 +40,21 @@ function validateSetDetails(setDetails: unknown, expectedSets: number): void {
     throw new Error(`Must provide exactly ${expectedSets} sets of data`);
   }
 
-  (setDetails as unknown[]).forEach((set: unknown, index: number) => {
+  (setDetails as Array<{ reps?: unknown; weight?: unknown; rpe?: unknown }>).forEach((set: unknown, index: number) => {
+    const typedSet = set as { reps?: unknown; weight?: unknown; rpe?: unknown };
+    
     // Validate reps
-    if (!Number.isInteger(set.reps) || set.reps <= 0) {
+    if (typeof typedSet.reps !== 'number' || !Number.isInteger(typedSet.reps) || typedSet.reps <= 0) {
       throw new Error(`Set ${index + 1}: Reps must be a positive integer`);
     }
 
     // Validate weight - MUST be > 0
-    if (typeof set.weight !== 'number' || set.weight <= 0 || set.weight > 1000) {
+    if (typeof typedSet.weight !== 'number' || typedSet.weight <= 0 || typedSet.weight > 1000) {
       throw new Error(`Set ${index + 1}: Weight must be greater than 0 and not exceed 1000 lbs`);
     }
 
     // Validate RPE
-    if (!Number.isInteger(set.rpe) || set.rpe < 1 || set.rpe > 10) {
+    if (typeof typedSet.rpe !== 'number' || !Number.isInteger(typedSet.rpe) || typedSet.rpe < 1 || typedSet.rpe > 10) {
       throw new Error(`Set ${index + 1}: RPE must be between 1 and 10`);
     }
   });

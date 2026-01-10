@@ -23,22 +23,23 @@ export function setupRoutes(app: Express, db: sqlite3.Database, loginLimiter: Re
           }
 
           // Fetch exercises for each workout
-          const workoutsWithExercises = workouts.map(workout => ({
+          const typedWorkouts = workouts as Array<{ id?: unknown; exercises?: Array<{ id: number }> }>;
+          const workoutsWithExercises = typedWorkouts.map(workout => ({
             ...workout,
-            exercises: []
+            exercises: [] as Array<{ id: number }>
           }));
 
           let completed = 0;
-          workouts.forEach((workout, idx) => {
+          typedWorkouts.forEach((workout, idx) => {
             db.all(
               'SELECT * FROM exercises WHERE workoutId = ? ORDER BY created_at ASC',
               [workout.id],
               (err: Error | null, exercises: unknown[]) => {
                 if (!err) {
-                  workoutsWithExercises[idx].exercises = exercises;
+                  workoutsWithExercises[idx].exercises = exercises as Array<{ id: number }>;
                 }
                 completed++;
-                if (completed === workouts.length) {
+                if (completed === typedWorkouts.length) {
                   res.json(workoutsWithExercises);
                 }
               }
@@ -263,13 +264,14 @@ export function setupRoutes(app: Express, db: sqlite3.Database, loginLimiter: Re
             return;
           }
 
-          const workoutsWithExercises = workouts.map(workout => ({
+          const typedWorkouts = workouts as Array<{ id?: unknown; exercises?: Array<{ id: number }> }>;
+          const workoutsWithExercises = typedWorkouts.map(workout => ({
             ...workout,
-            exercises: []
+            exercises: [] as Array<{ id: number }>
           }));
 
           let completed = 0;
-          if (workouts.length === 0) {
+          if (typedWorkouts.length === 0) {
             const timestamp = new Date().toISOString().slice(0, 10);
             res.setHeader('Content-Type', 'application/json');
             res.setHeader('Content-Disposition', `attachment; filename="workout-backup-${timestamp}.json"`);
@@ -282,23 +284,23 @@ export function setupRoutes(app: Express, db: sqlite3.Database, loginLimiter: Re
             return;
           }
 
-          workouts.forEach((workout, idx) => {
+          typedWorkouts.forEach((workout, idx) => {
             db.all(
               'SELECT * FROM exercises WHERE workoutId = ?',
               [workout.id],
               (err: Error | null, exercises: unknown[]) => {
                 if (!err) {
-                  workoutsWithExercises[idx].exercises = exercises;
+                  workoutsWithExercises[idx].exercises = exercises as Array<{ id: number }>;
                 }
                 completed++;
-                if (completed === workouts.length) {
+                if (completed === typedWorkouts.length) {
                   const exerciseCount = workoutsWithExercises.reduce((sum, w) => sum + w.exercises.length, 0);
                   const timestamp = new Date().toISOString().slice(0, 10);
                   res.setHeader('Content-Type', 'application/json');
                   res.setHeader('Content-Disposition', `attachment; filename="workout-backup-${timestamp}.json"`);
                   res.json({
                     exportDate: new Date().toISOString(),
-                    workoutCount: workouts.length,
+                    workoutCount: typedWorkouts.length,
                     exerciseCount,
                     workouts: workoutsWithExercises
                   });
