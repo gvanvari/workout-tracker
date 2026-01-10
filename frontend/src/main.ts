@@ -193,3 +193,4 @@ async function loadWorkouts() {
 (window as any).handleSelectExercise = handleSelectExerciseClick;
 (window as any).attachSuggestionListeners = attachSuggestionListeners;
 
+// test

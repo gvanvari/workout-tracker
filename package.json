@@ -33,6 +33,8 @@
     }
   },
   "lint-staged": {
-    "frontend/src/**/*.ts": ["eslint --fix", "tsc --noEmit"]
+    "frontend/src/**/*.ts": [
+      "npx eslint --config frontend/eslint.config.js --fix"
+    ]
   }
 }
