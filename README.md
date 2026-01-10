@@ -46,6 +46,8 @@ Single-user fitness tracker demonstrating API design, data modeling, and securit
 
 ## 🧠 Design Highlights
 
+- **MVC Frontend** — View layer (render functions), Model (types.ts), Controller (main.ts routing/state management)
+- **DAO Backend** — WorkoutDAO/ExerciseDAO abstract database operations from Express route handlers
 - Per-set data (weight/reps/RPE) stored as JSON within relational schema
 - Fuzzy matching prevents data fragmentation from user typos
 - Client-side fuzzy search for real-time exercise suggestions
