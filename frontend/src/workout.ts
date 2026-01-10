@@ -2,23 +2,13 @@ import * as API from './api';
 import type { Workout } from './types';
 import { updateNavButtons } from './loginPage';
 import { getSuggestions, normalizeExerciseName, PREDEFINED_EXERCISES } from './exerciseUtils';
+import { renderHeaderAndNav } from './Header';
 
 export function renderStartWorkoutPage(app: HTMLElement): void {
   const today = new Date().toISOString().split('T')[0];
 
   app.innerHTML = `
-    <div class="header">
-      <h1>💪 Workout Tracker</h1>
-      <button class="logout-btn" onclick="handleLogout()">Logout</button>
-    </div>
-
-    <div class="nav">
-      <button class="nav-btn" onclick="goToPage('dashboard')">Dashboard</button>
-      <button class="nav-btn active" onclick="goToPage('add')">Start Workout</button>
-      <button class="nav-btn" onclick="goToPage('history')">History</button>
-      <button class="nav-btn" onclick="goToPage('progress')">Progress</button>
-      <button class="btn-secondary" onclick="handleExport()">Export Data</button>
-    </div>
+    ${renderHeaderAndNav('add')}
 
     <div class="form-container">
       <h2>Start New Workout</h2>
@@ -66,18 +56,7 @@ export function renderAddExercisePage(
   }
 
   app.innerHTML = `
-    <div class="header">
-      <h1>💪 Workout Tracker - ${currentWorkout.workoutName}</h1>
-      <button class="logout-btn" onclick="handleLogout()">Logout</button>
-    </div>
-
-    <div class="nav">
-      <button class="nav-btn" onclick="goToPage('dashboard')">Dashboard</button>
-      <button class="nav-btn active" onclick="goToPage('add')">Add Exercise</button>
-      <button class="nav-btn" onclick="goToPage('history')">History</button>
-      <button class="nav-btn" onclick="goToPage('progress')">Progress</button>
-      <button class="btn-secondary" onclick="handleExport()">Export Data</button>
-    </div>
+    ${renderHeaderAndNav('add', `💪 Workout Tracker - ${currentWorkout.workoutName}`)}
 
     <div class="form-container">
       <h2>Add Exercise to ${currentWorkout.workoutName}</h2>

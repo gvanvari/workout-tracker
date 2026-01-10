@@ -1,23 +1,13 @@
 import type { Workout } from './types';
 import { updateNavButtons } from './loginPage';
 import { getUniqueExercises, getExerciseHistory } from './exerciseUtils';
+import { renderHeaderAndNav } from './Header';
 
 export function renderExerciseProgressPage(app: HTMLElement, workouts: Workout[]): void {
   const exercises = getUniqueExercises(workouts);
 
   app.innerHTML = `
-    <div class="header">
-      <h1>💪 Workout Tracker</h1>
-      <button class="logout-btn" onclick="handleLogout()">Logout</button>
-    </div>
-
-    <div class="nav">
-      <button class="nav-btn" onclick="goToPage('dashboard')">Dashboard</button>
-      <button class="nav-btn" onclick="goToPage('add')">Start Workout</button>
-      <button class="nav-btn" onclick="goToPage('history')">History</button>
-      <button class="nav-btn active" onclick="goToPage('progress')">Progress</button>
-      <button class="btn-secondary" onclick="handleExport()">Export Data</button>
-    </div>
+    ${renderHeaderAndNav('progress')}
 
     <div class="progress-container">
       <h2>Exercise Progress</h2>
@@ -62,18 +52,7 @@ export function renderExerciseDetailPage(
   const history = getExerciseHistory(selectedExerciseName, workouts);
 
   app.innerHTML = `
-    <div class="header">
-      <h1>💪 Workout Tracker</h1>
-      <button class="logout-btn" onclick="handleLogout()">Logout</button>
-    </div>
-
-    <div class="nav">
-      <button class="nav-btn" onclick="goToPage('dashboard')">Dashboard</button>
-      <button class="nav-btn" onclick="goToPage('add')">Start Workout</button>
-      <button class="nav-btn" onclick="goToPage('history')">History</button>
-      <button class="nav-btn active" onclick="goToPage('progress')">Progress</button>
-      <button class="btn-secondary" onclick="handleExport()">Export Data</button>
-    </div>
+    ${renderHeaderAndNav('progress')}
 
     <div class="progress-container">
       <button class="btn-secondary" onclick="goToPage('progress')" style="margin-bottom: 20px;">← Back</button>

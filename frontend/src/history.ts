@@ -1,21 +1,11 @@
 import * as API from './api';
 import type { Workout } from './types';
 import { updateNavButtons } from './loginPage';
+import { renderHeaderAndNav } from './Header';
 
 export function renderHistoryPage(app: HTMLElement, workouts: Workout[]): void {
   app.innerHTML = `
-    <div class="header">
-      <h1>💪 Workout Tracker</h1>
-      <button class="logout-btn" onclick="handleLogout()">Logout</button>
-    </div>
-
-    <div class="nav">
-      <button class="nav-btn" onclick="goToPage('dashboard')">Dashboard</button>
-      <button class="nav-btn" onclick="goToPage('add')">Start Workout</button>
-      <button class="nav-btn active" onclick="goToPage('history')">History</button>
-      <button class="nav-btn" onclick="goToPage('progress')">Progress</button>
-      <button class="btn-secondary" onclick="handleExport()">Export Data</button>
-    </div>
+    ${renderHeaderAndNav('history')}
 
     <div class="table-container">
       ${workouts.length === 0 ? `
