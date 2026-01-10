@@ -1,4 +1,5 @@
 import sqlite3 from 'sqlite3';
+import { promisify } from 'util';
 
 export interface Workout {
   id: number;
@@ -19,69 +20,48 @@ export interface Exercise {
 }
 
 export class WorkoutDAO {
-  constructor(private db: sqlite3.Database) {}
+  private dbAll: (sql: string, params?: unknown[]) => Promise<unknown[]>;
+  private dbGet: (sql: string, params?: unknown[]) => Promise<unknown>;
+  private dbRun: (sql: string, params?: unknown[]) => Promise<{ lastID: number; changes: number }>;
+
+  constructor(private db: sqlite3.Database) {
+    this.dbAll = promisify(db.all.bind(db));
+    this.dbGet = promisify(db.get.bind(db));
+    this.dbRun = promisify(db.run.bind(db));
+  }
 
   /**
    * Get all workouts ordered by date descending
    */
-  getAllWorkouts(): Promise<Workout[]> {
-    return new Promise((resolve, reject) => {
-      this.db.all(
-        'SELECT * FROM workouts ORDER BY date DESC, created_at DESC',
-        (err: Error | null, rows: unknown[]) => {
-          if (err) reject(err);
-          else resolve((rows as Workout[]) || []);
-        }
-      );
-    });
+  async getAllWorkouts(): Promise<Workout[]> {
+    const rows = await this.dbAll('SELECT * FROM workouts ORDER BY date DESC, created_at DESC');
+    return (rows as Workout[]) || [];
   }
 
   /**
    * Get workout by ID
    */
-  getWorkoutById(id: number): Promise<Workout | undefined> {
-    return new Promise((resolve, reject) => {
-      this.db.get(
-        'SELECT * FROM workouts WHERE id = ?',
-        [id],
-        (err: Error | null, row: unknown) => {
-          if (err) reject(err);
-          else resolve((row as Workout | undefined));
-        }
-      );
-    });
+  async getWorkoutById(id: number): Promise<Workout | undefined> {
+    const row = await this.dbGet('SELECT * FROM workouts WHERE id = ?', [id]);
+    return (row as Workout | undefined);
   }
 
   /**
    * Create a new workout
    */
-  createWorkout(date: string, workoutName: string): Promise<number> {
-    return new Promise((resolve, reject) => {
-      this.db.run(
-        'INSERT INTO workouts (date, workoutName, created_at) VALUES (?, ?, ?)',
-        [date, workoutName, new Date().toISOString()],
-        function (this: { lastID: number }, err: Error | null) {
-          if (err) reject(err);
-          else resolve(this.lastID);
-        }
-      );
-    });
+  async createWorkout(date: string, workoutName: string): Promise<number> {
+    const result = await this.dbRun(
+      'INSERT INTO workouts (date, workoutName, created_at) VALUES (?, ?, ?)',
+      [date, workoutName, new Date().toISOString()]
+    );
+    return result.lastID;
   }
 
   /**
    * Delete workout by ID
    */
-  deleteWorkout(id: number): Promise<void> {
-    return new Promise((resolve, reject) => {
-      this.db.run(
-        'DELETE FROM workouts WHERE id = ?',
-        [id],
-        function (this: { changes: number }, err: Error | null) {
-          if (err) reject(err);
-          else resolve();
-        }
-      );
-    });
+  async deleteWorkout(id: number): Promise<void> {
+    await this.dbRun('DELETE FROM workouts WHERE id = ?', [id]);
   }
 
   /**
@@ -114,25 +94,18 @@ export class WorkoutDAO {
   /**
    * Get all exercises for a specific workout
    */
-  private getWorkoutExercises(workoutId: number): Promise<Exercise[]> {
-    return new Promise((resolve, reject) => {
-      this.db.all(
-        'SELECT * FROM exercises WHERE workoutId = ? ORDER BY created_at ASC',
-        [workoutId],
-        (err: Error | null, rows: unknown[]) => {
-          if (err) reject(err);
-          else {
-            const exercises = (rows as Exercise[]) || [];
-            // Parse setDetails JSON strings
-            exercises.forEach((ex) => {
-              if (typeof ex.setDetails === 'string') {
-                ex.setDetails = JSON.parse(ex.setDetails);
-              }
-            });
-            resolve(exercises);
-          }
-        }
-      );
+  private async getWorkoutExercises(workoutId: number): Promise<Exercise[]> {
+    const rows = await this.dbAll(
+      'SELECT * FROM exercises WHERE workoutId = ? ORDER BY created_at ASC',
+      [workoutId]
+    );
+    const exercises = (rows as Exercise[]) || [];
+    // Parse setDetails JSON strings
+    exercises.forEach((ex) => {
+      if (typeof ex.setDetails === 'string') {
+        ex.setDetails = JSON.parse(ex.setDetails);
+      }
     });
+    return exercises;
   }
 }
