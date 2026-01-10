@@ -2,7 +2,7 @@ import * as API from './api';
 import type { Workout } from './types';
 import { updateNavButtons } from './loginPage';
 
-export function renderHistoryPage(app: HTMLElement, workouts: Workout[]) {
+export function renderHistoryPage(app: HTMLElement, workouts: Workout[]): void {
   app.innerHTML = `
     <div class="header">
       <h1>💪 Workout Tracker</h1>

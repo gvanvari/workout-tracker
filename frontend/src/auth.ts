@@ -21,6 +21,6 @@ export async function handleLogin(password: string): Promise<string> {
   return token;
 }
 
-export function handleLogout() {
+export function handleLogout(): void {
   localStorage.removeItem('token');
 }

@@ -13,7 +13,7 @@ export interface Exercise {
   workoutId?: number;
   name: string;
   sets: number;
-  setDetails?: string | any[] | null;
+  setDetails?: string | Array<{ weight: number; reps: number; rpe: number }> | null;
   notes?: string;
 }
 

@@ -1,9 +1,9 @@
 import * as API from './api';
-import type { Workout, Exercise } from './types';
+import type { Workout } from './types';
 import { updateNavButtons } from './loginPage';
 import { getSuggestions, normalizeExerciseName, PREDEFINED_EXERCISES } from './exerciseUtils';
 
-export function renderStartWorkoutPage(app: HTMLElement) {
+export function renderStartWorkoutPage(app: HTMLElement): void {
   const today = new Date().toISOString().split('T')[0];
 
   app.innerHTML = `
@@ -58,8 +58,8 @@ export function renderStartWorkoutPage(app: HTMLElement) {
 export function renderAddExercisePage(
   app: HTMLElement,
   currentWorkout: Workout | null,
-  workouts: Workout[]
-) {
+  _workouts: Workout[]
+): void {
   if (!currentWorkout) {
     renderStartWorkoutPage(app);
     return;
@@ -140,7 +140,7 @@ export function renderAddExercisePage(
   updateNavButtons('add');
 }
 
-export function updateSetInputs() {
+export function updateSetInputs(): void {
   const setsInput = document.getElementById('sets') as HTMLInputElement;
   const numSets = parseInt(setsInput.value);
   const container = document.getElementById('sets-container')!;
@@ -186,8 +186,9 @@ export async function handleStartWorkout(
     errorDiv.classList.add('hidden');
     const workout = await API.createWorkout(token, { date, workoutName });
     return workout;
-  } catch (error: any) {
-    errorDiv.textContent = error.message;
+  } catch (error: unknown) {
+    const err = error as Error;
+    errorDiv.textContent = err.message;
     errorDiv.classList.remove('hidden');
     throw error;
   }
@@ -196,7 +197,7 @@ export async function handleStartWorkout(
 export async function handleAddExercise(
   token: string,
   currentWorkout: Workout,
-  workouts: Workout[]
+  _workouts: Workout[]
 ): Promise<void> {
   let name = (document.getElementById('name') as HTMLInputElement).value;
   const sets = parseInt((document.getElementById('sets') as HTMLInputElement).value);
@@ -214,7 +215,7 @@ export async function handleAddExercise(
   }
 
   try {
-    const setDetails: any[] = [];
+    const setDetails: Array<{ reps: number; weight: number; rpe: number }> = [];
     for (let i = 1; i <= sets; i++) {
       const reps = parseInt((document.getElementById(`reps-${i}`) as HTMLInputElement).value);
       const weight = parseFloat((document.getElementById(`weight-${i}`) as HTMLInputElement).value);
@@ -241,8 +242,9 @@ export async function handleAddExercise(
 
     (document.getElementById('name') as HTMLInputElement).value = '';
     (document.getElementById('notes') as HTMLTextAreaElement).value = '';
-  } catch (error: any) {
-    errorDiv.textContent = error.message;
+  } catch (error: unknown) {
+    const err = error as Error;
+    errorDiv.textContent = err.message;
     errorDiv.classList.remove('hidden');
     throw error;
   }
@@ -266,7 +268,7 @@ export async function handleDeleteExercise(
   currentWorkout.exercises = currentWorkout.exercises!.filter(e => e.id !== exerciseId);
 }
 
-export function handleExerciseInput(workouts: Workout[]) {
+export function handleExerciseInput(workouts: Workout[]): void {
   const input = (document.getElementById('name') as HTMLInputElement).value;
   const suggestionsDiv = document.getElementById('exercise-suggestions')!;
 
@@ -299,7 +301,7 @@ export function handleExerciseInput(workouts: Workout[]) {
   suggestionsDiv.classList.remove('hidden');
 }
 
-export function attachSuggestionListeners(suggestionsDiv: HTMLElement) {
+export function attachSuggestionListeners(suggestionsDiv: HTMLElement): void {
   const items = suggestionsDiv.querySelectorAll('.suggestion-item');
   items.forEach(item => {
     item.addEventListener('click', (e) => {
@@ -313,7 +315,7 @@ export function attachSuggestionListeners(suggestionsDiv: HTMLElement) {
   });
 }
 
-export function selectExercise(exerciseName: string) {
+export function selectExercise(exerciseName: string): void {
   const input = document.getElementById('name') as HTMLInputElement;
   if (!input) return;
 
@@ -325,7 +327,7 @@ export function selectExercise(exerciseName: string) {
   suggestionsDiv.classList.add('hidden');
 }
 
-export function showAllExercises() {
+export function showAllExercises(): void {
   const suggestionsDiv = document.getElementById('exercise-suggestions')!;
   suggestionsDiv.innerHTML = PREDEFINED_EXERCISES
     .map(ex => `<div class="suggestion-item" data-exercise="${ex}">${ex}</div>`)

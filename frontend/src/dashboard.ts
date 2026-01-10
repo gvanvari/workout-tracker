@@ -4,7 +4,7 @@ import { updateNavButtons } from './loginPage';
 export function renderDashboard(
   app: HTMLElement,
   workouts: Workout[]
-) {
+): void {
   const lastWorkout = workouts.length > 0 ? workouts[0] : null;
 
   app.innerHTML = `

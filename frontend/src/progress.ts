@@ -2,7 +2,7 @@ import type { Workout } from './types';
 import { updateNavButtons } from './loginPage';
 import { getUniqueExercises, getExerciseHistory } from './exerciseUtils';
 
-export function renderExerciseProgressPage(app: HTMLElement, workouts: Workout[]) {
+export function renderExerciseProgressPage(app: HTMLElement, workouts: Workout[]): void {
   const exercises = getUniqueExercises(workouts);
 
   app.innerHTML = `
@@ -53,7 +53,7 @@ export function renderExerciseDetailPage(
   app: HTMLElement,
   selectedExerciseName: string | null,
   workouts: Workout[]
-) {
+): void {
   if (!selectedExerciseName) {
     renderExerciseProgressPage(app, workouts);
     return;
@@ -87,7 +87,7 @@ export function renderExerciseDetailPage(
         </div>
       ` : `
         <div class="exercise-detail-list">
-          ${history.map((instance, idx) => `
+          ${history.map((instance, _idx) => `
             <div class="exercise-instance-card">
               <div class="instance-header">
                 <span class="instance-date">${instance.date}</span>
@@ -116,6 +116,6 @@ export function renderExerciseDetailPage(
   updateNavButtons('progress');
 }
 
-export function handleSelectExercise(exerciseName: string): string {
-  return exerciseName;
+export function handleSelectExercise(_exerciseName: string): void {
+  // Function is used for navigation
 }

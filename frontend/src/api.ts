@@ -1,3 +1,5 @@
+import type { Workout, Exercise } from './types';
+
 const API_URL = 'http://localhost:4000/api';
 
 export async function login(password: string): Promise<{ token: string; success: boolean }> {
@@ -16,7 +18,7 @@ export async function login(password: string): Promise<{ token: string; success:
 
 // ===== WORKOUT API =====
 
-export async function getWorkouts(token: string): Promise<any[]> {
+export async function getWorkouts(token: string): Promise<Workout[]> {
   const response = await fetch(`${API_URL}/workouts`, {
     headers: { 'Authorization': `Bearer ${token}` }
   });
@@ -27,7 +29,7 @@ export async function getWorkouts(token: string): Promise<any[]> {
   return data;
 }
 
-export async function createWorkout(token: string, workout: any): Promise<any> {
+export async function createWorkout(token: string, workout: Partial<Workout>): Promise<Workout> {
   const response = await fetch(`${API_URL}/workouts`, {
     method: 'POST',
     headers: {
@@ -43,7 +45,7 @@ export async function createWorkout(token: string, workout: any): Promise<any> {
   return data;
 }
 
-export async function finishWorkout(token: string, workoutId: number, endTime?: string): Promise<any> {
+export async function finishWorkout(token: string, workoutId: number, endTime?: string): Promise<Workout> {
   const response = await fetch(`${API_URL}/workouts/${workoutId}`, {
     method: 'PUT',
     headers: {
@@ -72,7 +74,7 @@ export async function deleteWorkout(token: string, id: number): Promise<void> {
 
 // ===== EXERCISE API =====
 
-export async function addExercise(token: string, exercise: any): Promise<any> {
+export async function addExercise(token: string, exercise: Partial<Exercise>): Promise<Exercise> {
   const response = await fetch(`${API_URL}/exercises`, {
     method: 'POST',
     headers: {

@@ -86,7 +86,7 @@ export function getUniqueExercises(workouts: Workout[]): Array<{ name: string; c
         try {
           const setDetails = typeof ex.setDetails === 'string' ? JSON.parse(ex.setDetails) : ex.setDetails;
           if (Array.isArray(setDetails)) {
-            maxWeight = Math.max(...setDetails.map((s: any) => s.weight || 0));
+            maxWeight = Math.max(...setDetails.map((s: { weight?: number; reps?: number; rpe?: number }) => s.weight || 0));
           }
         } catch { }
       }
@@ -120,21 +120,17 @@ export function getUniqueExercises(workouts: Workout[]): Array<{ name: string; c
   return result;
 }
 
-export function getExerciseHistory(exerciseName: string, workouts: Workout[]): Array<{
+interface ExerciseHistoryEntry {
   date: string;
   workoutName: string;
   sets: number;
-  setDetails: any[];
+  setDetails: Array<{ weight: number; reps: number; rpe: number }>;
   notes?: string;
-}> {
+}
+
+export function getExerciseHistory(exerciseName: string, workouts: Workout[]): ExerciseHistoryEntry[] {
   const normalized = exerciseName.toLowerCase().trim();
-  const history: Array<{
-    date: string;
-    workoutName: string;
-    sets: number;
-    setDetails: any[];
-    notes?: string;
-  }> = [];
+  const history: ExerciseHistoryEntry[] = [];
 
   workouts.forEach(workout => {
     (workout.exercises || []).forEach(ex => {
@@ -147,7 +143,7 @@ export function getExerciseHistory(exerciseName: string, workouts: Workout[]): A
             date: workout.date,
             workoutName: workout.workoutName,
             sets: ex.sets,
-            setDetails: Array.isArray(setDetails) ? setDetails : [],
+            setDetails: Array.isArray(setDetails) ? (setDetails as Array<{ weight: number; reps: number; rpe: number }>) : [],
             notes: ex.notes
           });
         } catch {
