@@ -1,9 +1,11 @@
-import { Request, Response } from 'express';
+import { Request, Response, Express } from 'express';
 import sqlite3 from 'sqlite3';
 import { validateWorkout, validateExercise } from './validators';
 import { setupAuthRoutes, verifyToken } from './auth';
 
-export function setupRoutes(app: any, db: sqlite3.Database, loginLimiter: any): void {
+import { RequestHandler } from 'express';
+
+export function setupRoutes(app: Express, db: sqlite3.Database, loginLimiter: RequestHandler): void {
   // Setup auth routes
   setupAuthRoutes(app, db, loginLimiter);
 
@@ -14,7 +16,7 @@ export function setupRoutes(app: any, db: sqlite3.Database, loginLimiter: any): 
     try {
       db.all(
         'SELECT * FROM workouts ORDER BY date DESC, created_at DESC',
-        (err: Error | null, workouts: any[]) => {
+        (err: Error | null, workouts: unknown[]) => {
           if (err) {
             res.status(500).json({ error: 'Database error', message: err.message });
             return;
@@ -31,7 +33,7 @@ export function setupRoutes(app: any, db: sqlite3.Database, loginLimiter: any): 
             db.all(
               'SELECT * FROM exercises WHERE workoutId = ? ORDER BY created_at ASC',
               [workout.id],
-              (err: Error | null, exercises: any[]) => {
+              (err: Error | null, exercises: unknown[]) => {
                 if (!err) {
                   workoutsWithExercises[idx].exercises = exercises;
                 }
@@ -48,8 +50,9 @@ export function setupRoutes(app: any, db: sqlite3.Database, loginLimiter: any): 
           }
         }
       );
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      res.status(400).json({ error: message });
     }
   });
 
@@ -64,7 +67,7 @@ export function setupRoutes(app: any, db: sqlite3.Database, loginLimiter: any): 
         'INSERT INTO workouts (date, workoutName, startTime, notes) VALUES (?, ?, ?, ?)'
       );
 
-      stmt.run(date, workoutName, startTime || null, notes || null, function (this: any, err: Error | null) {
+      stmt.run(date, workoutName, startTime || null, notes || null, function (this: { lastID: number }, err: Error | null) {
         if (err) {
           res.status(500).json({ error: 'Database error', message: err.message });
           return;
@@ -79,8 +82,9 @@ export function setupRoutes(app: any, db: sqlite3.Database, loginLimiter: any): 
           exercises: []
         });
       });
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      res.status(400).json({ error: message });
     }
   });
 
@@ -89,7 +93,7 @@ export function setupRoutes(app: any, db: sqlite3.Database, loginLimiter: any): 
     try {
       const { id } = req.params;
 
-      db.get('SELECT * FROM workouts WHERE id = ?', [id], (err: Error | null, workout: any) => {
+      db.get('SELECT * FROM workouts WHERE id = ?', [id], (err: Error | null, workout: unknown) => {
         if (err) {
           res.status(500).json({ error: 'Database error', message: err.message });
           return;
@@ -102,7 +106,7 @@ export function setupRoutes(app: any, db: sqlite3.Database, loginLimiter: any): 
         db.all(
           'SELECT * FROM exercises WHERE workoutId = ? ORDER BY created_at ASC',
           [id],
-          (err: Error | null, exercises: any[]) => {
+          (err: Error | null, exercises: unknown[]) => {
             if (err) {
               res.status(500).json({ error: 'Database error', message: err.message });
               return;
@@ -111,8 +115,9 @@ export function setupRoutes(app: any, db: sqlite3.Database, loginLimiter: any): 
           }
         );
       });
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      res.status(400).json({ error: message });
     }
   });
 
@@ -126,7 +131,7 @@ export function setupRoutes(app: any, db: sqlite3.Database, loginLimiter: any): 
         'UPDATE workouts SET endTime = ?, notes = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
       );
 
-      stmt.run(endTime || null, notes || null, id, function (this: any, err: Error | null) {
+      stmt.run(endTime || null, notes || null, id, function (this: { changes: number }, err: Error | null) {
         if (err) {
           res.status(500).json({ error: 'Database error', message: err.message });
           return;
@@ -137,8 +142,9 @@ export function setupRoutes(app: any, db: sqlite3.Database, loginLimiter: any): 
         }
         res.json({ id: parseInt(id), endTime: endTime || null, notes: notes || null });
       });
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      res.status(400).json({ error: message });
     }
   });
 
@@ -148,7 +154,7 @@ export function setupRoutes(app: any, db: sqlite3.Database, loginLimiter: any): 
       const { id } = req.params;
 
       const stmt = db.prepare('DELETE FROM workouts WHERE id = ?');
-      stmt.run(id, function (err: Error | null) {
+      stmt.run(id, function (this: { changes: number }, err: Error | null) {
         if (err) {
           res.status(500).json({ error: 'Database error', message: err.message });
           return;
@@ -159,8 +165,9 @@ export function setupRoutes(app: any, db: sqlite3.Database, loginLimiter: any): 
         }
         res.status(204).send();
       });
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      res.status(400).json({ error: message });
     }
   });
 
@@ -179,7 +186,7 @@ export function setupRoutes(app: any, db: sqlite3.Database, loginLimiter: any): 
         'INSERT INTO exercises (workoutId, name, sets, setDetails, notes) VALUES (?, ?, ?, ?, ?)'
       );
 
-      stmt.run(workoutId, name, sets, setDetailsJson, notes || null, function (this: any, err: Error | null) {
+      stmt.run(workoutId, name, sets, setDetailsJson, notes || null, function (this: { lastID: number }, err: Error | null) {
         if (err) {
           res.status(500).json({ error: 'Database error', message: err.message });
           return;
@@ -194,8 +201,9 @@ export function setupRoutes(app: any, db: sqlite3.Database, loginLimiter: any): 
           notes: notes || null
         });
       });
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      res.status(400).json({ error: message });
     }
   });
 
@@ -204,7 +212,7 @@ export function setupRoutes(app: any, db: sqlite3.Database, loginLimiter: any): 
     try {
       const { id } = req.params;
 
-      db.get('SELECT * FROM exercises WHERE id = ?', [id], (err: Error | null, row: any) => {
+      db.get('SELECT * FROM exercises WHERE id = ?', [id], (err: Error | null, row: unknown) => {
         if (err) {
           res.status(500).json({ error: 'Database error', message: err.message });
           return;
@@ -215,8 +223,9 @@ export function setupRoutes(app: any, db: sqlite3.Database, loginLimiter: any): 
         }
         res.json(row);
       });
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      res.status(400).json({ error: message });
     }
   });
 
@@ -226,7 +235,7 @@ export function setupRoutes(app: any, db: sqlite3.Database, loginLimiter: any): 
       const { id } = req.params;
 
       const stmt = db.prepare('DELETE FROM exercises WHERE id = ?');
-      stmt.run(id, function (err: Error | null) {
+      stmt.run(id, function (this: { changes: number }, err: Error | null) {
         if (err) {
           res.status(500).json({ error: 'Database error', message: err.message });
           return;
@@ -237,8 +246,9 @@ export function setupRoutes(app: any, db: sqlite3.Database, loginLimiter: any): 
         }
         res.status(204).send();
       });
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      res.status(400).json({ error: message });
     }
   });
 
@@ -247,7 +257,7 @@ export function setupRoutes(app: any, db: sqlite3.Database, loginLimiter: any): 
     try {
       db.all(
         'SELECT * FROM workouts ORDER BY date DESC',
-        (err: Error | null, workouts: any[]) => {
+        (err: Error | null, workouts: unknown[]) => {
           if (err) {
             res.status(500).json({ error: 'Database error', message: err.message });
             return;
@@ -276,7 +286,7 @@ export function setupRoutes(app: any, db: sqlite3.Database, loginLimiter: any): 
             db.all(
               'SELECT * FROM exercises WHERE workoutId = ?',
               [workout.id],
-              (err: Error | null, exercises: any[]) => {
+              (err: Error | null, exercises: unknown[]) => {
                 if (!err) {
                   workoutsWithExercises[idx].exercises = exercises;
                 }
@@ -298,8 +308,9 @@ export function setupRoutes(app: any, db: sqlite3.Database, loginLimiter: any): 
           });
         }
       );
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      res.status(400).json({ error: message });
     }
   });
 }

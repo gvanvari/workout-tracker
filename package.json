@@ -35,6 +35,9 @@
   "lint-staged": {
     "frontend/src/**/*.ts": [
       "npx eslint --config frontend/eslint.config.js --fix"
+    ],
+    "backend/src/**/*.ts": [
+      "npx eslint --config backend/eslint.config.js --fix"
     ]
   }
 }

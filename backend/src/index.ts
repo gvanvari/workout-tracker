@@ -46,9 +46,10 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 // Error handling
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
   console.error(err.stack);
-  res.status(500).json({ error: 'Internal server error', message: err.message });
+  const message = err instanceof Error ? err.message : 'Unknown error';
+  res.status(500).json({ error: 'Internal server error', message });
 });
 
 // Start server

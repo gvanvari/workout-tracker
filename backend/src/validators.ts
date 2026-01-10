@@ -1,4 +1,4 @@
-export function validateWorkout(data: any): void {
+export function validateWorkout(data: { date?: unknown; workoutName?: unknown }): void {
   // Validate date format (YYYY-MM-DD)
   if (!data.date || !/^\d{4}-\d{2}-\d{2}$/.test(data.date)) {
     throw new Error('Invalid date format (YYYY-MM-DD)');
@@ -10,7 +10,7 @@ export function validateWorkout(data: any): void {
   }
 }
 
-export function validateExercise(data: any): void {
+export function validateExercise(data: { name?: unknown; sets?: unknown; setDetails?: unknown; notes?: unknown }): void {
   // Validate name
   if (!data.name || typeof data.name !== 'string' || data.name.length === 0 || data.name.length > 50) {
     throw new Error('Invalid exercise name (1-50 characters)');
@@ -35,12 +35,12 @@ export function validateExercise(data: any): void {
 }
 
 // Validate per-set data structure
-function validateSetDetails(setDetails: any, expectedSets: number): void {
+function validateSetDetails(setDetails: unknown, expectedSets: number): void {
   if (!Array.isArray(setDetails) || setDetails.length !== expectedSets) {
     throw new Error(`Must provide exactly ${expectedSets} sets of data`);
   }
 
-  setDetails.forEach((set: any, index: number) => {
+  (setDetails as unknown[]).forEach((set: unknown, index: number) => {
     // Validate reps
     if (!Number.isInteger(set.reps) || set.reps <= 0) {
       throw new Error(`Set ${index + 1}: Reps must be a positive integer`);
