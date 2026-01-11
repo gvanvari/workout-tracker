@@ -46,6 +46,7 @@ Single-user fitness tracker demonstrating API design, data modeling, and securit
 - **SCA Scanning** — Snyk checks for vulnerable npm dependencies on every push
 - **DAST Scanning** — OWASP ZAP probes running API for runtime vulnerabilities
 - **SAST Scanning** — SonarQube analyzes source code for bugs, code smells, and quality metrics
+  ![Security-scanner](./images/ci-sec-check.png)
 
 ## 🧠 Design Highlights
 
