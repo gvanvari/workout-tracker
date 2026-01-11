@@ -1,0 +1,20 @@
+# OWASP ZAP Rules Configuration
+# Format: rule_id <tab> action (on/off/ignore)
+
+# High/Medium severity rules
+10021	on	X-Frame-Options Header Missing
+10020	on	X-Content-Type-Options Header Missing
+10031	on	Insufficient Site Isolation
+10035	on	Strict-Transport-Security Missing
+10038	on	Content Security Policy Missing
+20019	on	External Redirect
+
+# Medium severity rules (common)
+20014	on	HTTP Response Splitting
+20012	on	Anti-CSRF Tokens Not Present
+20015	on	Re-submission of Data
+20016	on	Cookie No HttpOnly Flag
+
+# Info level rules (can be ignored for MVP)
+10002	off	Private IP Address
+10003	off	Session ID in URL
