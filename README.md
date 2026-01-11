@@ -43,6 +43,9 @@ Single-user fitness tracker demonstrating API design, data modeling, and securit
 - **Authentication** — Stateless JWT with client-side token expiration checks
 - **Rate Limiting** — 5 login attempts per 15-minute window
 - **Headers** — CORS, X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security
+- **SCA Scanning** — Snyk checks for vulnerable npm dependencies on every push
+- **DAST Scanning** — OWASP ZAP probes running API for runtime vulnerabilities
+- **SAST Scanning** — SonarQube analyzes source code for bugs, code smells, and quality metrics
 
 ## 🧠 Design Highlights
 
